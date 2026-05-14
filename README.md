@@ -48,7 +48,7 @@ Die Datei `investment-dashboard.html` einfach im Browser öffnen.
 ### GitHub Pages (empfohlen)
 Wenn das Dashboard über GitHub Pages bereitgestellt wird, ist der KI-Update-Button ohne weitere Einrichtung nutzbar und der localStorage bleibt dauerhaft erhalten.
 
-URL-Schema: `https://BENUTZERNAME.github.io/REPOSITORY/investment-dashboard.html`
+URL-Schema: `https://Stephan314.github.io/REPOSITORY/investment-dashboard.html`
 
 ---
 
