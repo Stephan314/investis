@@ -964,7 +964,7 @@ async function runAiUpdate() {
   }
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://investis-proxy.gerhardts-ml.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
