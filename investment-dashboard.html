@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v6.2</title>
+<title>Investis Dashboard v6.3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -186,7 +186,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.2</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.3</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -216,10 +216,10 @@ select.form-input option{background:var(--bg3)}
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
       <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v6.1</span>
-      <button class="btn-top" onclick="refreshAll()">&#x27F3; Refresh</button>
-      <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()">&#x21BB; Live-Daten</button>
-      <button class="btn-top btn-ai" onclick="openAiPanel()">&#x2736; KI-Update</button>
-      <button class="btn-top btn-ai" id="btn-ai-all" onclick="aiUpdateAll()">&#x2736; KI alles</button>
+      <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
+      <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
+      <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
+      <button class="btn-top btn-ai" id="btn-ai-all" onclick="aiUpdateAll()">* KI alles</button>
     </div>
   </div>
   <div class="content">
@@ -348,7 +348,7 @@ select.form-input option{background:var(--bg3)}
 <div class="overlay" id="overlay" onclick="closeAiPanel()"></div>
 <div class="ai-panel" id="ai-panel">
   <div class="ai-panel-header">
-    <span class="ai-panel-title">&#x2736; KI-Update</span>
+    <span class="ai-panel-title">* KI-Update</span>
     <button class="ai-panel-close" onclick="closeAiPanel()">✕</button>
   </div>
   <div class="ai-panel-body">
@@ -812,7 +812,7 @@ function fmtMcap(val) {
 
 async function fmpUpdateAll() {
   var btn = document.getElementById('btn-live');
-  btn.disabled = true; btn.textContent = '\u21bb L\u00e4dt...';
+  btn.disabled = true; btn.textContent = '<> Lädt...';
   var updated=0, errors=0;
   for(var i=0; i<STOCKS.length; i++) {
     var s = STOCKS[i];
@@ -839,7 +839,7 @@ async function fmpUpdateAll() {
   hideProg();
   renderTable(); renderMatrix(); renderSidebar();
   document.getElementById('last-update').textContent = 'Live ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-  btn.disabled=false; btn.textContent='&#x21BB; Live-Daten';
+  btn.disabled=false; btn.textContent='<> Live-Daten';
   showToast('\u21bb '+updated+' aktualisiert'+(errors?' ('+errors+' Fehler)':''));
 }
 
@@ -876,14 +876,14 @@ async function callClaude(prompt) {
 async function runAiUpdate() {
   var btn = document.getElementById('ai-run-btn');
   var result = document.getElementById('ai-result');
-  btn.disabled=true; btn.textContent='\u27f3 Analyse l\u00e4uft...';
+  btn.disabled=true; btn.textContent='~ Analyse läuft...';
   result.className='ai-result loading'; result.textContent='Claude analysiert\u2026';
   var assets = allAssets();
   var prompt = '';
   if(aiMode==='single') {
     var tk = document.getElementById('ai-ticker-sel').value;
     var s = assets.find(function(a){ return a.tk===tk; });
-    if(!s){ btn.disabled=false; btn.textContent='\u2736 Neue Analyse'; return; }
+    if(!s){ btn.disabled=false; btn.textContent='* Neue Analyse'; return; }
     prompt = 'Analysiere folgendes Asset kurz auf Deutsch:\n'
       + 'Ticker: '+s.tk+'\nName: '+s.nm+'\nSektor: '+s.sec+'\nADR: '+s.adr+'%\nSignal: '+s.signal
       + '\nKGV: '+(s.pe||'k.A.')+'\nBeta: '+(s.beta||'k.A.')
@@ -906,13 +906,13 @@ async function runAiUpdate() {
     result.className='ai-result'; result.textContent=text;
     document.getElementById('last-update').textContent = 'KI ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   } catch(e) { result.className='ai-result'; result.textContent='Fehler: '+e.message; }
-  btn.disabled=false; btn.textContent='\u2736 Neue Analyse';
+  btn.disabled=false; btn.textContent='* Neue Analyse';
 }
 
 // ── KI ALLES ─────────────────────────────────
 async function aiUpdateAll() {
   var btn = document.getElementById('btn-ai-all');
-  btn.disabled=true; btn.textContent='\u27f3 L\u00e4dt...';
+  btn.disabled=true; btn.textContent='~ Lädt...';
   var assetLines = STOCKS.map(function(s){
     return s.tk+'|'+s.nm+'|'+s.sec+'|KGV:'+(s.pe||'k.A.')+'|Beta:'+(s.beta||'k.A.')+'|ADR:'+s.adr+'%|Signal:'+s.signal+(s.livePrice?'|Kurs:'+s.livePrice:'');
   }).join('\n');
@@ -945,7 +945,7 @@ async function aiUpdateAll() {
     document.getElementById('last-update').textContent = 'KI alle ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     showToast('\u2736 '+updated+' Signale aktualisiert \u2713');
   } catch(e) { hideProg(); showToast('Fehler: '+e.message,'error'); }
-  btn.disabled=false; btn.textContent='&#x2736; KI alles';
+  btn.disabled=false; btn.textContent='* KI alles';
 }
 
 // ── REFRESH ──────────────────────────────────
