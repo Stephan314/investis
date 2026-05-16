@@ -60,6 +60,12 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .ai-btn{font-size:10px;padding:4px 11px;background:rgba(200,184,154,.1);border:0.5px solid rgba(200,184,154,.5);color:var(--accent);cursor:pointer;border-radius:3px;font-family:var(--mono);transition:all .1s;white-space:nowrap}
 .ai-btn:hover{background:rgba(200,184,154,.2);border-color:var(--accent)}
 .ai-btn:disabled{opacity:.4;cursor:not-allowed}
+.fmp-btn{font-size:10px;padding:4px 11px;background:rgba(96,165,250,.1);border:0.5px solid rgba(96,165,250,.4);color:var(--blue);cursor:pointer;border-radius:3px;font-family:var(--mono);transition:all .1s;white-space:nowrap}
+.fmp-btn:hover{background:rgba(96,165,250,.2);border-color:var(--blue)}
+.fmp-btn:disabled{opacity:.4;cursor:not-allowed}
+.fmp-progress{position:fixed;bottom:0;left:0;right:0;height:2px;background:var(--bg3);z-index:200;display:none}
+.fmp-progress-bar{height:100%;background:var(--blue);width:0%;transition:width .3s}
+.fmp-status{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:6px 14px;font-size:11px;color:var(--text);z-index:201;display:none;white-space:nowrap}
 .ai-panel{position:fixed;top:0;right:0;width:400px;height:100vh;background:var(--bg2);border-left:1px solid var(--border2);z-index:100;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
 .ai-panel.open{transform:translateX(0)}
 .ai-panel-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
@@ -225,7 +231,7 @@ select.form-input option{background:var(--bg3)}
 <div class="sidebar">
   <div class="sb-logo">
     <h1>Investis</h1>
-    <p>Investment System v5.1</p>
+    <p>Investment System v6</p>
   </div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
@@ -264,7 +270,9 @@ select.form-input option{background:var(--bg3)}
     <div class="topbar-right">
       <span class="ts" id="last-update">–</span>
       <button class="refresh-btn" onclick="refreshAll()">⟳ Aktualisieren</button>
+      <button class="fmp-btn" id="fmp-btn" onclick="fmpUpdateAll()" title="Aktuelle Kurse und Kennzahlen von FMP laden">↻ Live-Daten</button>
       <button class="ai-btn" onclick="openAiPanel()">✶ KI-Update</button>
+      <button class="ai-btn" id="ai-all-btn" onclick="aiUpdateAll()" title="KI-Analyse für alle Assets">✶ KI alles</button>
     </div>
   </div>
   <div class="content">
@@ -302,11 +310,12 @@ select.form-input option{background:var(--bg3)}
               <th data-c="name" onclick="sortBy('name')">Name</th>
               <th data-c="sector" onclick="sortBy('sector')">Sektor</th>
               <th data-c="adr" onclick="sortBy('adr')" class="sort-d">ADR%</th>
+              <th data-c="livePrice" onclick="sortBy('livePrice')">Kurs</th>
+              <th data-c="liveChange" onclick="sortBy('liveChange')">Änd.%</th>
               <th data-c="mcap" onclick="sortBy('mcap')">MktKap</th>
-              <th data-c="vol" onclick="sortBy('vol')">Ø Vol.</th>
               <th data-c="exchange" onclick="sortBy('exchange')">Börse</th>
               <th data-c="signal" onclick="sortBy('signal')">Signal</th>
-              <th>Notiz</th>
+              <th>Notiz / KI</th>
             </tr></thead>
             <tbody id="wl-body"></tbody>
           </table>
@@ -443,6 +452,8 @@ select.form-input option{background:var(--bg3)}
 </div>
 </div>
 
+<div class="fmp-progress" id="fmp-progress"><div class="fmp-progress-bar" id="fmp-progress-bar"></div></div>
+<div class="fmp-status" id="fmp-status"></div>
 <div class="overlay" id="overlay" onclick="closeAiPanel()"></div>
 <div class="ai-panel" id="ai-panel">
   <div class="ai-panel-header">
@@ -599,15 +610,21 @@ function renderTable() {
   });
   document.getElementById('wl-body').innerHTML = data.map(s=>{
     const sigClass=SIG[s.signal]||'';
+    const chgClass = s.liveChange ? (parseFloat(s.liveChange)>=0?'adr-hi':'' ) : '';
+    const chgTxt = s.liveChange ? (parseFloat(s.liveChange)>=0?'+':'')+s.liveChange+'%' : '–';
+    const priceTxt = s.livePrice ? s.livePrice+'€' : '–';
+    const noteTxt = s.aiNote || s.note;
     return `<tr onclick="openChart('${s.tk}')">
       <td class="ticker-cell">${s.tk}</td>
       <td style="font-size:11px">${s.nm}</td>
       <td><span class="badge ${SEC_BADGE[s.sec]||''}">${s.sec}</span></td>
       <td class="${s.adr>=7?'adr-hi':s.adr>=5?'adr-md':''}" style="font-weight:500">${s.adr.toFixed(1)}%</td>
-      <td>${s.mcap}</td><td>${s.vol}</td>
+      <td style="font-family:var(--mono);font-size:11px">${priceTxt}</td>
+      <td class="${chgClass}" style="font-weight:500;font-size:11px">${chgTxt}</td>
+      <td>${s.mcap}</td>
       <td style="font-size:10px;color:var(--muted)">${s.exch}</td>
       <td><span class="signal-chip ${sigClass}">${SIG_TXT[s.signal]||'–'}</span></td>
-      <td class="note-cell">${s.note}</td>
+      <td class="note-cell">${noteTxt}</td>
     </tr>`;
   }).join('');
   document.getElementById('badge-main').textContent = STOCKS.length;
@@ -878,6 +895,167 @@ function importWatchlist(event) {
     event.target.value = ''; // reset so same file can be re-imported
   };
   reader.readAsText(file);
+}
+
+// ── FMP LIVE DATA ───────────────────────
+const WORKER_URL = 'https://investis-proxy.gerhardts-ml.workers.dev';
+
+async function fetchFmpTicker(ticker) {
+  const resp = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Action': 'fmp-quote' },
+    body: JSON.stringify({ ticker })
+  });
+  return await resp.json();
+}
+
+function showProgress(pct, msg) {
+  const bar = document.getElementById('fmp-progress');
+  const fill = document.getElementById('fmp-progress-bar');
+  const status = document.getElementById('fmp-status');
+  bar.style.display = 'block';
+  status.style.display = 'block';
+  fill.style.width = pct + '%';
+  status.textContent = msg;
+}
+function hideProgress() {
+  document.getElementById('fmp-progress').style.display = 'none';
+  document.getElementById('fmp-status').style.display = 'none';
+}
+
+function formatMcap(val) {
+  if (!val) return null;
+  if (val >= 1e12) return (val/1e12).toFixed(1) + ' Bio';
+  if (val >= 1e9)  return (val/1e9).toFixed(0) + ' Mrd';
+  if (val >= 1e6)  return (val/1e6).toFixed(0) + ' Mio';
+  return val;
+}
+
+async function fmpUpdateAll() {
+  const btn = document.getElementById('fmp-btn');
+  btn.disabled = true;
+  btn.textContent = '↻ Lädt...';
+
+  const all = STOCKS;
+  let updated = 0, errors = 0;
+
+  for (let i = 0; i < all.length; i++) {
+    const s = all[i];
+    const pct = Math.round((i / all.length) * 100);
+    showProgress(pct, 'Lade ' + s.tk + ' (' + (i+1) + '/' + all.length + ')...');
+    try {
+      const data = await fetchFmpTicker(s.tk);
+      if (data && data.price) {
+        if (data.pe   != null) s.pe   = Math.round(data.pe * 10) / 10;
+        if (data.pb   != null) s.pb   = Math.round(data.pb * 10) / 10;
+        if (data.beta != null) s.beta = Math.round(data.beta * 10) / 10;
+        if (data.mcap != null) s.mcap = formatMcap(data.mcap);
+        if (data.price != null) s.livePrice = data.price.toFixed(2);
+        if (data.change != null) s.liveChange = data.change.toFixed(2);
+        updated++;
+      }
+    } catch(e) { errors++; }
+    // small delay to avoid rate limiting
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  hideProgress();
+  renderTable();
+  renderMatrix();
+  renderSidebar();
+  const now = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('last-update').textContent = 'Live-Daten ' + now;
+  btn.disabled = false;
+  btn.textContent = '↻ Live-Daten';
+  showToast('↻ ' + updated + ' Titel aktualisiert' + (errors ? ', ' + errors + ' Fehler' : '') + ' ✓');
+  setTimeout(hideProgress, 100);
+}
+
+// ── KI ALLES AKTUALISIEREN ────────────────────
+async function aiUpdateAll() {
+  const btn = document.getElementById('ai-all-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ Lädt...';
+
+  const all = STOCKS;
+  const results = [];
+
+  // Build one comprehensive prompt for all assets
+  const assetList = all.map(s =>
+    s.tk + ' (' + s.nm + ', ' + s.sec + ', KGV:' + (s.pe||'k.A.') +
+    ', Beta:' + (s.beta||'k.A.') + ', ADR:' + s.adr + '%, Signal:' + s.signal +
+    (s.livePrice ? ', Kurs:' + s.livePrice + (s.liveChange ? ' [' + s.liveChange + '%]' : '') : '') + ')'
+  ).join('
+');
+
+  const prompt = 'Du bist ein erfahrener Portfoliomanager. Bewerte folgende 30 Assets kurz auf Deutsch.
+
+' +
+    'Gib fuer jedes Asset genau dieses Format aus (eine Zeile pro Asset):
+' +
+    'TICKER|SIGNAL|KURZBEGRUENDUNG (max 12 Woerter)
+
+' +
+    'SIGNAL muss eines von: buy, watch, hold, avoid
+
+' +
+    'Assets:
+' + assetList + '
+
+' +
+    'Antworte NUR mit den Zeilen im Format TICKER|SIGNAL|BEGRUENDUNG. Keine anderen Texte.';
+
+  showProgress(30, 'KI analysiert alle Assets...');
+
+  try {
+    const resp = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content ? data.content.map(b => b.text || '').join('') : '';
+
+    showProgress(80, 'Signale werden übernommen...');
+
+    // Parse response and update signals
+    let updated = 0;
+    text.split('
+').forEach(line => {
+      const parts = line.trim().split('|');
+      if (parts.length >= 2) {
+        const tk = parts[0].trim().toUpperCase();
+        const sig = parts[1].trim().toLowerCase();
+        const note = parts[2] ? parts[2].trim() : null;
+        const stock = STOCKS.find(s => s.tk === tk);
+        if (stock && ['buy','watch','hold','avoid'].includes(sig)) {
+          stock.signal = sig;
+          if (note) stock.aiNote = note;
+          updated++;
+        }
+      }
+    });
+
+    hideProgress();
+    renderTable();
+    renderMatrix();
+    renderSidebar();
+
+    const now = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('last-update').textContent = 'KI-Update alle ' + now;
+    showToast('✶ ' + updated + ' Signale aktualisiert ✓');
+
+  } catch(e) {
+    hideProgress();
+    showToast('Fehler: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✶ KI alles';
 }
 
 // ── REFRESH ───────────────────────────────────
