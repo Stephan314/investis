@@ -834,7 +834,7 @@ async function fmpUpdateAll() {
         updated++;
       }
     } catch(e) { errors++; }
-    await new Promise(function(r){ setTimeout(r,300); });
+    await new Promise(function(r){ setTimeout(r,500); });
   }
   hideProg();
   renderTable(); renderMatrix(); renderSidebar();
