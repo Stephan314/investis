@@ -612,7 +612,7 @@ function renderTable() {
     const sigClass=SIG[s.signal]||'';
     const chgClass = s.liveChange ? (parseFloat(s.liveChange)>=0?'adr-hi':'' ) : '';
     const chgTxt = s.liveChange ? (parseFloat(s.liveChange)>=0?'+':'')+s.liveChange+'%' : '–';
-    const priceTxt = s.livePrice ? s.livePrice+'€' : '–';
+    const priceTxt = s.livePrice ? s.livePrice+'\u20ac' : '–';
     const noteTxt = s.aiNote || s.note;
     return `<tr onclick="openChart('${s.tk}')">
       <td class="ticker-cell">${s.tk}</td>
@@ -981,29 +981,19 @@ async function aiUpdateAll() {
   const results = [];
 
   // Build one comprehensive prompt for all assets
+  const nl = '\\n';
   const assetList = all.map(s =>
     s.tk + ' (' + s.nm + ', ' + s.sec + ', KGV:' + (s.pe||'k.A.') +
     ', Beta:' + (s.beta||'k.A.') + ', ADR:' + s.adr + '%, Signal:' + s.signal +
     (s.livePrice ? ', Kurs:' + s.livePrice + (s.liveChange ? ' [' + s.liveChange + '%]' : '') : '') + ')'
-  ).join('
-');
+  ).join(nl);
 
-  const prompt = 'Du bist ein erfahrener Portfoliomanager. Bewerte folgende 30 Assets kurz auf Deutsch.
-
-' +
-    'Gib fuer jedes Asset genau dieses Format aus (eine Zeile pro Asset):
-' +
-    'TICKER|SIGNAL|KURZBEGRUENDUNG (max 12 Woerter)
-
-' +
-    'SIGNAL muss eines von: buy, watch, hold, avoid
-
-' +
-    'Assets:
-' + assetList + '
-
-' +
-    'Antworte NUR mit den Zeilen im Format TICKER|SIGNAL|BEGRUENDUNG. Keine anderen Texte.';
+  const prompt = 'Du bist ein erfahrener Portfoliomanager. Bewerte folgende 30 Assets kurz auf Deutsch.' + nl +
+    nl + 'Gib fuer jedes Asset genau dieses Format aus (eine Zeile pro Asset):' + nl +
+    'TICKER|SIGNAL|KURZBEGRUENDUNG (max 12 Woerter)' + nl +
+    nl + 'SIGNAL muss eines von: buy, watch, hold, avoid' + nl +
+    nl + 'Assets:' + nl + assetList + nl +
+    nl + 'Antworte NUR mit den Zeilen im Format TICKER|SIGNAL|BEGRUENDUNG. Keine anderen Texte.';
 
   showProgress(30, 'KI analysiert alle Assets...');
 
@@ -1024,8 +1014,7 @@ async function aiUpdateAll() {
 
     // Parse response and update signals
     let updated = 0;
-    text.split('
-').forEach(line => {
+    text.split(nl).forEach(line => {
       const parts = line.trim().split('|');
       if (parts.length >= 2) {
         const tk = parts[0].trim().toUpperCase();
