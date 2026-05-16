@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v6.4</title>
+<title>Investis Dashboard v6.5</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -186,7 +186,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.4</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.5</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -299,7 +299,7 @@ select.form-input option{background:var(--bg3)}
         </div>
         <div id="my-wl-wrap" class="wl-wrap" style="flex:1;min-height:0">
           <table>
-            <thead><tr><th>Ticker</th><th>Name</th><th>Sektor</th><th>ADR%</th><th>Börse</th><th>Signal</th><th>Notiz</th><th></th></tr></thead>
+            <thead><tr><th>Ticker</th><th>Name</th><th>Sektor</th><th>ADR%</th><th>Kurs</th><th>Börse</th><th>Signal</th><th>Notiz</th><th></th></tr></thead>
             <tbody id="my-wl-body"></tbody>
           </table>
         </div>
@@ -559,6 +559,56 @@ function addCustomAsset() {
   showToast(tk + ' hinzugef\u00fcgt \u2713');
 }
 
+function editCustomAsset(tk) {
+  var s = myWatchlist.find(function(a){ return a.tk===tk; });
+  if(!s) return;
+  // Fill form with existing values
+  document.getElementById('f-ticker').value = s.tk;
+  document.getElementById('f-ticker').disabled = true; // can't change ticker
+  document.getElementById('f-name').value = s.nm;
+  document.getElementById('f-sector').value = s.sec;
+  document.getElementById('f-exch').value = s.exch;
+  document.getElementById('f-adr').value = s.adr || '';
+  document.getElementById('f-signal').value = s.signal;
+  document.getElementById('f-note').value = s.note !== '–' ? s.note : '';
+  // Change add button to save
+  var addBtn = document.querySelector('.btn-add');
+  addBtn.textContent = '✓ Speichern';
+  addBtn.onclick = function(){ saveEditedAsset(tk); };
+  // Scroll form into view
+  document.querySelector('.add-form').scrollIntoView({behavior:'smooth'});
+}
+
+function saveEditedAsset(tk) {
+  var s = myWatchlist.find(function(a){ return a.tk===tk; });
+  if(!s) return;
+  s.nm     = document.getElementById('f-name').value.trim() || s.nm;
+  s.sec    = document.getElementById('f-sector').value;
+  s.exch   = document.getElementById('f-exch').value;
+  s.adr    = parseFloat(document.getElementById('f-adr').value) || s.adr;
+  s.signal = document.getElementById('f-signal').value;
+  s.note   = document.getElementById('f-note').value.trim() || '–';
+  delete s.aiNote;
+  saveMyList();
+  renderMyTable(); renderSidebar(); renderMatrix();
+  // Reset form
+  resetAddForm();
+  showToast(tk + ' aktualisiert ✓');
+}
+
+function resetAddForm() {
+  document.getElementById('f-ticker').value = '';
+  document.getElementById('f-ticker').disabled = false;
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-adr').value = '';
+  document.getElementById('f-note').value = '';
+  document.getElementById('f-sector').value = 'Custom';
+  document.getElementById('f-signal').value = 'watch';
+  var addBtn = document.querySelector('.btn-add');
+  addBtn.textContent = '+ Hinzufügen';
+  addBtn.onclick = function(){ addCustomAsset(); };
+}
+
 function removeCustomAsset(tk) {
   myWatchlist = myWatchlist.filter(function(s){ return s.tk!==tk; });
   saveMyList(); renderMyTable(); renderSidebar(); renderMatrix();
@@ -580,16 +630,21 @@ function renderMyTable() {
   var html = '';
   myWatchlist.forEach(function(s){
     var sc = SIG[s.signal]||'';
+    var priceTxt = s.livePrice ? (s.livePrice+' $') : '–';
+    var chgClass = s.liveChange ? (parseFloat(s.liveChange)>=0?'adr-hi':'adr-md') : '';
     html += '<tr onclick="openChart(\'' + s.tk + '\')">';
     html += '<td class="ticker-cell">' + s.tk + '</td>';
     html += '<td style="font-size:11px">' + s.nm + '</td>';
     html += '<td><span class="badge ' + (SEC_BADGE[s.sec]||'b-custom') + '">' + s.sec + '</span></td>';
-    html += '<td>' + (s.adr>0 ? s.adr.toFixed(1)+'%' : '\u2013') + '</td>';
+    html += '<td>' + (s.adr>0 ? s.adr.toFixed(1)+'%' : '–') + '</td>';
+    html += '<td class="' + chgClass + '" style="font-size:11px">' + priceTxt + '</td>';
     html += '<td style="font-size:10px;color:var(--muted)">' + s.exch + '</td>';
-    html += '<td><span class="signal-chip ' + sc + '">' + (SIG_TXT[s.signal]||'\u2013') + '</span></td>';
-    html += '<td class="note-cell">' + s.note + '</td>';
-    html += '<td><span class="del-btn" onclick="event.stopPropagation();removeCustomAsset(\'' + s.tk + '\')">\u2715</span></td>';
-    html += '</tr>';
+    html += '<td><span class="signal-chip ' + sc + '">' + (SIG_TXT[s.signal]||'–') + '</span></td>';
+    html += '<td class="note-cell">' + (s.aiNote||s.note) + '</td>';
+    html += '<td style="display:flex;gap:6px">';
+    html += '<span class="del-btn" style="color:var(--accent)" title="Bearbeiten" onclick="event.stopPropagation();editCustomAsset(\'' + s.tk + '\')">✎</span>';
+    html += '<span class="del-btn" title="Löschen" onclick="event.stopPropagation();removeCustomAsset(\'' + s.tk + '\')">✕</span>';
+    html += '</td></tr>';
   });
   document.getElementById('my-wl-body').innerHTML = html;
 }
@@ -813,10 +868,11 @@ function fmtMcap(val) {
 async function fmpUpdateAll() {
   var btn = document.getElementById('btn-live');
   btn.disabled = true; btn.textContent = '<> Lädt...';
+  var targets = allAssets();
   var updated=0, errors=0;
-  for(var i=0; i<STOCKS.length; i++) {
-    var s = STOCKS[i];
-    showProg(Math.round(i/STOCKS.length*100), 'Lade '+s.tk+' ('+(i+1)+'/'+STOCKS.length+')...');
+  for(var i=0; i<targets.length; i++) {
+    var s = targets[i];
+    showProg(Math.round(i/targets.length*100), 'Lade '+s.tk+' ('+(i+1)+'/'+targets.length+')...');
     try {
       var resp = await fetch(WORKER, {
         method:'POST',
@@ -837,91 +893,34 @@ async function fmpUpdateAll() {
     await new Promise(function(r){ setTimeout(r,500); });
   }
   hideProg();
-  renderTable(); renderMatrix(); renderSidebar();
+  renderTable(); renderMyTable(); renderMatrix(); renderSidebar();
   document.getElementById('last-update').textContent = 'Live ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
   btn.disabled=false; btn.textContent='<> Live-Daten';
-  showToast('\u21bb '+updated+' aktualisiert'+(errors?' ('+errors+' Fehler)':''));
-}
-
-// ── KI UPDATE (single) ───────────────────────
-function openAiPanel() {
-  var sel = document.getElementById('ai-ticker-sel');
-  var opts = '';
-  allAssets().forEach(function(s){ opts += '<option value="'+s.tk+'">'+s.tk+' \u2014 '+s.nm+'</option>'; });
-  sel.innerHTML = opts;
-  document.getElementById('ai-panel').classList.add('open');
-  document.getElementById('overlay').classList.add('open');
-}
-function closeAiPanel() {
-  document.getElementById('ai-panel').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-}
-function setMode(btn, mode) {
-  aiMode = mode;
-  document.querySelectorAll('.scope-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  document.getElementById('ai-ticker-wrap').style.display = mode==='single' ? 'flex' : 'none';
-}
-
-async function callClaude(prompt) {
-  var resp = await fetch(WORKER, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-  });
-  var data = await resp.json();
-  return data.content ? data.content.map(function(b){ return b.text||''; }).join('') : 'Keine Antwort erhalten.';
-}
-
-async function runAiUpdate() {
-  var btn = document.getElementById('ai-run-btn');
-  var result = document.getElementById('ai-result');
-  btn.disabled=true; btn.textContent='~ Analyse läuft...';
-  result.className='ai-result loading'; result.textContent='Claude analysiert\u2026';
-  var assets = allAssets();
-  var prompt = '';
-  if(aiMode==='single') {
-    var tk = document.getElementById('ai-ticker-sel').value;
-    var s = assets.find(function(a){ return a.tk===tk; });
-    if(!s){ btn.disabled=false; btn.textContent='* Neue Analyse'; return; }
-    prompt = 'Analysiere folgendes Asset kurz auf Deutsch:\n'
-      + 'Ticker: '+s.tk+'\nName: '+s.nm+'\nSektor: '+s.sec+'\nADR: '+s.adr+'%\nSignal: '+s.signal
-      + '\nKGV: '+(s.pe||'k.A.')+'\nBeta: '+(s.beta||'k.A.')
-      + (s.livePrice ? '\nAkt. Kurs: '+s.livePrice+' $ ('+(s.liveChange||'0')+'%)' : '')
-      + '\nNotiz: '+s.note
-      + '\n\n1. Aktuelle Marktsituation\n2. Technische Einschaetzung\n3. Risiken\n4. Handlungsempfehlung\n\nMax 200 Woerter. Kein Markdown.';
-  } else if(aiMode==='watchlist') {
-    var list = myWatchlist.length>0 ? myWatchlist : assets.slice(0,5);
-    var tickers = list.map(function(s){ return s.tk+' ('+s.nm+', '+s.sec+', Signal: '+s.signal+')'; }).join(', ');
-    prompt = 'Bewerte diese Assets auf Deutsch:\n\n'+tickers+'\n\nJe 2-3 Saetze Einschaetzung + Handlungsempfehlung. Kein Markdown.';
-  } else if(aiMode==='top5') {
-    var buys = assets.filter(function(s){ return s.signal==='buy'; }).slice(0,5);
-    var tickers = buys.map(function(s){ return s.tk+' ('+s.nm+', ADR '+s.adr+'%, KGV '+(s.pe||'k.A.')+')'; }).join(', ');
-    prompt = 'Ranke diese Kaufsignal-Titel nach aktuellem Potenzial (1=staerkste) und begruende kurz:\n\n'+tickers+'\n\nMax 150 Woerter. Kein Markdown.';
-  } else {
-    prompt = 'Aktuelle Marktlage auf Deutsch (Mai 2026):\n1. Makro-Ueberblick\n2. Sektoren mit Rueckenwind\n3. Sektoren unter Druck\n4. Konkreter Tipp fuer diese Woche\n\nMax 200 Woerter. Kein Markdown.';
-  }
-  try {
-    var text = await callClaude(prompt);
-    result.className='ai-result'; result.textContent=text;
-    document.getElementById('last-update').textContent = 'KI ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-  } catch(e) { result.className='ai-result'; result.textContent='Fehler: '+e.message; }
-  btn.disabled=false; btn.textContent='* Neue Analyse';
+  showToast('<> '+updated+' aktualisiert'+(errors?' ('+errors+' Fehler)':''));
 }
 
 // ── KI ALLES ─────────────────────────────────
 async function aiUpdateAll() {
   var btn = document.getElementById('btn-ai-all');
   btn.disabled=true; btn.textContent='~ Lädt...';
-  var assetLines = STOCKS.map(function(s){
-    return s.tk+'|'+s.nm+'|'+s.sec+'|KGV:'+(s.pe||'k.A.')+'|Beta:'+(s.beta||'k.A.')+'|ADR:'+s.adr+'%|Signal:'+s.signal+(s.livePrice?'|Kurs:'+s.livePrice:'');
+
+  var targets = allAssets();
+  var assetLines = targets.map(function(s){
+    return s.tk+'|'+s.nm+'|'+s.sec
+      +'|KGV:'+(s.pe||'k.A.')
+      +'|Beta:'+(s.beta||'k.A.')
+      +'|ADR:'+s.adr+'%'
+      +'|Signal:'+s.signal
+      +(s.livePrice?'|Kurs:'+s.livePrice:'');
   }).join('\n');
-  var prompt = 'Bewerte folgende 30 Assets und gib fuer jedes eine Zeile aus.\n\n'
+
+  var prompt = 'Bewerte folgende Assets und gib fuer jedes eine Zeile aus.\n\n'
     + 'Format: TICKER|SIGNAL|BEGRUENDUNG (max 10 Woerter)\n'
     + 'SIGNAL ist eines von: buy, watch, hold, avoid\n\n'
     + 'Assets:\n'+assetLines+'\n\n'
     + 'Antworte NUR mit den Zeilen im Format TICKER|SIGNAL|BEGRUENDUNG. Nichts sonst.';
-  showProg(30, 'KI analysiert alle 30 Assets...');
+
+  showProg(30, 'KI analysiert '+targets.length+' Assets...');
   try {
     var text = await callClaude(prompt);
     showProg(80, 'Signale werden uebernommen...');
@@ -932,7 +931,8 @@ async function aiUpdateAll() {
         var tk = parts[0].trim().toUpperCase();
         var sig = parts[1].trim().toLowerCase();
         var note = parts[2] ? parts[2].trim() : null;
-        var stock = STOCKS.find(function(s){ return s.tk===tk; });
+        // Search in both lists
+        var stock = allAssets().find(function(s){ return s.tk===tk; });
         if(stock && ['buy','watch','hold','avoid'].indexOf(sig)>=0) {
           stock.signal = sig;
           if(note) stock.aiNote = note;
@@ -941,9 +941,9 @@ async function aiUpdateAll() {
       }
     });
     hideProg();
-    renderTable(); renderMatrix();
+    renderTable(); renderMyTable(); renderMatrix();
     document.getElementById('last-update').textContent = 'KI alle ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
-    showToast('\u2736 '+updated+' Signale aktualisiert \u2713');
+    showToast('* '+updated+' Signale aktualisiert');
   } catch(e) { hideProg(); showToast('Fehler: '+e.message,'error'); }
   btn.disabled=false; btn.textContent='* KI alles';
 }
