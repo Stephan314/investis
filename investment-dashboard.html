@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v6.3</title>
+<title>Investis Dashboard v6.4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -186,7 +186,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.3</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.4</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -387,7 +387,7 @@ const TV_SYM = {
   ASML:'NASDAQ:ASML',BESI:'EURONEXT:BESI',IONQ:'NYSE:IONQ',PLTR:'NYSE:PLTR',
   NET:'NYSE:NET',SNOW:'NYSE:SNOW',CRWD:'NASDAQ:CRWD',APP:'NASDAQ:APP',
   MDB:'NASDAQ:MDB',DDOG:'NASDAQ:DDOG',HOOD:'NASDAQ:HOOD',COIN:'NASDAQ:COIN',
-  SQ:'NYSE:SQ',NU:'NYSE:NU',RXRX:'NASDAQ:RXRX',MRNA:'NASDAQ:MRNA',
+  SQ:'NYSE:XYZ',NU:'NYSE:NU',RXRX:'NASDAQ:RXRX',MRNA:'NASDAQ:MRNA',
   HIMS:'NYSE:HIMS',SANA:'NASDAQ:SANA',ENPH:'NASDAQ:ENPH',RWE:'XETRA:RWE',
   RHM:'XETRA:RHM',HEICO:'NYSE:HEICO',TSLA:'NASDAQ:TSLA',RIVN:'NASDAQ:RIVN',
   SHOP:'NYSE:SHOP',PDBC:'NASDAQ:PDBC',GSG:'NYSE:GSG'
@@ -416,7 +416,7 @@ const STOCKS = [
   {tk:'DDOG',nm:'Datadog',sec:'Tech',adr:5.4,mcap:'42 Mrd',vol:'4 Mio',exch:'NASDAQ',note:'Cloud-Monitoring',signal:'buy',pe:110,pb:18,beta:1.6},
   {tk:'HOOD',nm:'Robinhood Markets',sec:'Fin',adr:8.3,mcap:'22 Mrd',vol:'25 Mio',exch:'NASDAQ',note:'Retail-Broker, hoch volatil',signal:'watch',pe:28,pb:3.4,beta:2.1},
   {tk:'COIN',nm:'Coinbase',sec:'Fin',adr:9.1,mcap:'55 Mrd',vol:'20 Mio',exch:'NASDAQ',note:'Crypto-Proxy',signal:'watch',pe:22,pb:5,beta:2.6},
-  {tk:'SQ',nm:'Block (Square)',sec:'Fin',adr:6.4,mcap:'35 Mrd',vol:'12 Mio',exch:'NYSE',note:'Fintech + Crypto',signal:'watch',pe:18,pb:2.8,beta:1.9},
+  {tk:'SQ',nm:'Block Inc (XYZ)',sec:'Fin',adr:6.4,mcap:'35 Mrd',vol:'12 Mio',exch:'NYSE',note:'Fintech + Crypto, Ticker jetzt XYZ',signal:'watch',pe:18,pb:2.8,beta:1.9},
   {tk:'NU',nm:'Nu Holdings',sec:'Fin',adr:5.5,mcap:'58 Mrd',vol:'40 Mio',exch:'NYSE',note:'Latam-Neobank',signal:'buy',pe:24,pb:6,beta:1.6},
   {tk:'RXRX',nm:'Recursion Pharma',sec:'Health',adr:8.7,mcap:'4 Mrd',vol:'12 Mio',exch:'NASDAQ',note:'KI-Medikamenten-Entdeckung',signal:'avoid',pe:null,pb:3,beta:2.3},
   {tk:'MRNA',nm:'Moderna',sec:'Health',adr:6.3,mcap:'12 Mrd',vol:'10 Mio',exch:'NASDAQ',note:'mRNA-Pipeline, unter Druck',signal:'watch',pe:null,pb:1.2,beta:1.8},
