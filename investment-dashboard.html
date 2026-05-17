@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v6.6</title>
+<title>Investis Dashboard v6.7</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -82,7 +82,9 @@ tr:hover td{background:rgba(255,255,255,.025);cursor:pointer}
 .b-defense{background:rgba(148,163,184,.12);color:#94a3b8}
 .b-cons{background:rgba(167,139,250,.12);color:#a78bfa}
 .b-auto{background:rgba(52,211,153,.12);color:#34d399}
-.b-custom{background:rgba(192,132,252,.12);color:var(--purple)}
+.b-custom{background:rgba(192,132,252,.12);color:var(--purple)}.b-commodity{background:rgba(251,146,60,.12);color:#fb923c}.b-software{background:rgba(34,211,238,.12);color:#22d3ee}.b-commodity{background:rgba(251,146,60,.12);color:#fb923c}.b-software{background:rgba(34,211,238,.12);color:#22d3ee}
+.b-commodity{background:rgba(251,146,60,.12);color:#fb923c}
+.b-software{background:rgba(34,211,238,.12);color:#22d3ee}
 .del-btn{font-size:10px;color:var(--dim);cursor:pointer;padding:2px 6px;border-radius:2px;transition:all .1s}
 .del-btn:hover{color:var(--red);background:rgba(248,113,113,.1)}
 .add-form{background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;padding:14px;flex-shrink:0}
@@ -186,7 +188,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.6</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.7</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -241,6 +243,8 @@ select.form-input option{background:var(--bg3)}
           <button class="sec-btn" onclick="filterSector(this,'Cons')">Konsum</button>
           <button class="sec-btn" onclick="filterSector(this,'Auto')">Mobilität</button>
           <button class="sec-btn" onclick="filterSector(this,'ETF')">ETF</button>
+          <button class="sec-btn" onclick="filterSector(this,'Commodity')">Rohstoffe</button>
+          <button class="sec-btn" onclick="filterSector(this,'Software')">Software</button>
         </div>
         <div class="wl-wrap">
           <table>
@@ -271,6 +275,8 @@ select.form-input option{background:var(--bg3)}
                 <option value="Custom">Eigene</option><option value="Tech">Tech</option><option value="Semi">Halbleiter</option>
                 <option value="Health">Biotech</option><option value="Fin">Fintech</option><option value="Energy">Energie</option>
                 <option value="Defense">Rüstung</option><option value="Cons">Konsum</option><option value="Auto">Mobilität</option><option value="ETF">ETF</option>
+                <option value="Commodity">Rohstoffe</option>
+                <option value="Software">Software</option>
               </select>
             </div>
             <div class="form-field"><label class="form-label">Börse</label>
@@ -393,7 +399,7 @@ const TV_SYM = {
   SHOP:'NYSE:SHOP',PDBC:'NASDAQ:PDBC',GSG:'NYSE:GSG'
 };
 
-const SEC_BADGE = {Semi:'b-semi',Tech:'b-tech',Health:'b-health',Fin:'b-fin',Energy:'b-energy',Defense:'b-defense',Cons:'b-cons',Auto:'b-auto',ETF:'b-fin',Custom:'b-custom'};
+const SEC_BADGE = {Semi:'b-semi',Tech:'b-tech',Health:'b-health',Fin:'b-fin',Energy:'b-energy',Defense:'b-defense',Cons:'b-cons',Auto:'b-auto',ETF:'b-fin',Custom:'b-custom',Commodity:'b-commodity',Software:'b-software'};
 const SIG      = {buy:'sig-buy',watch:'sig-watch',avoid:'sig-avoid',hold:'sig-hold'};
 const SIG_TXT  = {buy:'Kaufen',watch:'Beobachten',avoid:'Meiden',hold:'Halten'};
 const SIG_CSS  = {buy:'buy',watch:'watch',avoid:'avoid',hold:'hold'};
