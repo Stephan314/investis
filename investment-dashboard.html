@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v6.5</title>
+<title>Investis Dashboard v6.6</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -186,7 +186,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.5</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.6</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -855,6 +855,90 @@ function importWatchlist(event) {
   };
   reader.readAsText(file);
 }
+
+// ── CLAUDE AI HELPER ────────────────────────
+async function callClaude(prompt) {
+  var resp = await fetch(WORKER, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+  });
+  var data = await resp.json();
+  return data.content ? data.content.map(function(b){ return b.text||''; }).join('') : 'Keine Antwort erhalten.';
+}
+
+// ── KI UPDATE PANEL ──────────────────────────
+
+function openAiPanel() {
+  var sel = document.getElementById('ai-ticker-sel');
+  var opts = '';
+  allAssets().forEach(function(s){ opts += '<option value="'+s.tk+'">'+s.tk+' — '+s.nm+'</option>'; });
+  sel.innerHTML = opts;
+  document.getElementById('ai-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeAiPanel() {
+  document.getElementById('ai-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function setMode(btn, mode) {
+  aiMode = mode;
+  document.querySelectorAll('.scope-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('ai-ticker-wrap').style.display = mode==='single' ? 'flex' : 'none';
+}
+
+async function runAiUpdate() {
+  var btn = document.getElementById('ai-run-btn');
+  var result = document.getElementById('ai-result');
+  btn.disabled=true; btn.textContent='~ Analyse laeuft...';
+  result.className='ai-result loading'; result.textContent='Claude analysiert...';
+  var assets = allAssets();
+  var nl = '\n';
+  var prompt = '';
+  if(aiMode==='single') {
+    var tk = document.getElementById('ai-ticker-sel').value;
+    var s = assets.find(function(a){ return a.tk===tk; });
+    if(!s){ btn.disabled=false; btn.textContent='* Neue Analyse'; return; }
+    prompt = 'Analysiere folgendes Asset kurz auf Deutsch:' + nl
+      + 'Ticker: '+s.tk + nl + 'Name: '+s.nm + nl + 'Sektor: '+s.sec + nl
+      + 'ADR: '+s.adr+'%' + nl + 'Signal: '+s.signal + nl
+      + 'KGV: '+(s.pe||'k.A.') + nl + 'Beta: '+(s.beta||'k.A.') + nl
+      + (s.livePrice ? 'Kurs: '+s.livePrice+' $ ('+(s.liveChange||'0')+'%)' + nl : '')
+      + 'Notiz: '+s.note + nl + nl
+      + '1. Aktuelle Marktsituation' + nl
+      + '2. Technische Einschaetzung' + nl
+      + '3. Risiken' + nl
+      + '4. Handlungsempfehlung' + nl + nl
+      + 'Max 200 Woerter. Kein Markdown.';
+  } else if(aiMode==='watchlist') {
+    var list = myWatchlist.length>0 ? myWatchlist : assets.slice(0,5);
+    var tickers = list.map(function(s){ return s.tk+' ('+s.nm+', '+s.sec+', Signal: '+s.signal+')'; }).join(', ');
+    prompt = 'Bewerte diese Assets auf Deutsch:' + nl + nl + tickers + nl + nl
+      + 'Je 2-3 Saetze Einschaetzung und Handlungsempfehlung. Kein Markdown.';
+  } else if(aiMode==='top5') {
+    var buys = assets.filter(function(s){ return s.signal==='buy'; }).slice(0,5);
+    var tickers = buys.map(function(s){ return s.tk+' ('+s.nm+', ADR '+s.adr+'%, KGV '+(s.pe||'k.A.')+')'; }).join(', ');
+    prompt = 'Ranke diese Kaufsignal-Titel nach aktuellem Potenzial und begruende kurz:' + nl + nl
+      + tickers + nl + nl + 'Max 150 Woerter. Kein Markdown.';
+  } else {
+    prompt = 'Aktuelle Marktlage auf Deutsch (Mai 2026):' + nl
+      + '1. Makro-Ueberblick' + nl
+      + '2. Sektoren mit Rueckenwind' + nl
+      + '3. Sektoren unter Druck' + nl
+      + '4. Konkreter Tipp fuer diese Woche' + nl + nl
+      + 'Max 200 Woerter. Kein Markdown.';
+  }
+  try {
+    var text = await callClaude(prompt);
+    result.className='ai-result'; result.textContent=text;
+    document.getElementById('last-update').textContent = 'KI '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { result.className='ai-result'; result.textContent='Fehler: '+e.message; }
+  btn.disabled=false; btn.textContent='* Neue Analyse';
+}
+
 
 // ── FMP LIVE DATA ────────────────────────────
 function fmtMcap(val) {
