@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v6.8</title>
+<title>Investis Dashboard v6.9</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -188,7 +188,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.8</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v6.9</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -304,6 +304,7 @@ select.form-input option{background:var(--bg3)}
           </div>
           <div class="form-actions">
             <button class="btn-add" onclick="addCustomAsset()">+ Hinzufügen</button>
+            <button class="btn-secondary" id="cancel-edit-btn" style="display:none;color:var(--amber);border-color:var(--amber)" onclick="resetAddForm()">Abbrechen</button>
             <button class="btn-secondary" onclick="exportWatchlist()">↓ Export</button>
             <button class="btn-secondary" onclick="document.getElementById('import-file').click()">↑ Import</button>
             <input type="file" id="import-file" accept=".json" style="display:none" onchange="importWatchlist(event)">
@@ -499,6 +500,8 @@ function switchWlTab(tab) {
   document.getElementById('wltab-my').classList.toggle('active', tab==='my');
   document.getElementById('wl-main-content').style.display = tab==='main' ? 'flex' : 'none';
   document.getElementById('wl-my-content').style.display = tab==='my' ? 'flex' : 'none';
+  // Always reset form when switching tabs
+  resetAddForm();
 }
 
 // ── MAIN TABLE ───────────────────────────────
@@ -595,7 +598,7 @@ function editCustomAsset(tk) {
 
 function saveEditedAsset(tk) {
   var s = myWatchlist.find(function(a){ return a.tk===tk; });
-  if(!s) return;
+  if(!s) { showToast('Asset nicht mehr vorhanden — wurde gelöscht', 'error'); resetAddForm(); return; }
   s.nm     = document.getElementById('f-name').value.trim() || s.nm;
   s.sec    = document.getElementById('f-sector').value;
   s.exch   = document.getElementById('f-exch').value;
