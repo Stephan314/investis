@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.7</title>
+<title>Investis Dashboard v7.8</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -241,9 +241,13 @@ select.form-input option{background:var(--bg3)}
 .pf-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .pf-pos-del{font-size:10px;color:var(--dim);cursor:pointer;padding:2px 5px;border-radius:2px;transition:all .1s}
 .pf-pos-del:hover{color:var(--red);background:rgba(248,113,113,.1)}
-.pf-two-col{display:grid;grid-template-columns:1fr 260px;gap:12px;flex:1;min-height:0;overflow:hidden}
-.pf-two-col .pf-wrap{overflow:auto}
-.pf-right-col{display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.pf-two-col{display:flex;flex-direction:row;gap:0;flex:1;min-height:0;overflow:hidden}
+.pf-two-col .pf-wrap{overflow:auto;flex:1;min-width:0}
+.pf-right-col{display:flex;flex-direction:column;gap:12px;overflow-y:auto;width:260px;min-width:160px;max-width:520px;flex-shrink:0}
+.pf-resizer{width:6px;flex-shrink:0;cursor:col-resize;background:transparent;position:relative;z-index:10;transition:background .15s;margin:0 3px}
+.pf-resizer:hover,.pf-resizer.dragging{background:rgba(200,184,154,.25)}
+.pf-resizer::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:32px;width:2px;background:var(--border2);border-radius:1px}
+.pf-resizer:hover::after,.pf-resizer.dragging::after{background:var(--accent)}
 
 /* ── ASSET SEARCH POPUP ── */
 .as-search-wrap{position:relative}
@@ -298,7 +302,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.7</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.8</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -329,7 +333,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.7</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.8</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -514,8 +518,11 @@ select.form-input option{background:var(--bg3)}
           </table>
         </div>
 
+        <!-- Resizer -->
+        <div class="pf-resizer" id="pf-resizer" title="Ziehen zum Anpassen · Doppelklick zum Zurücksetzen"></div>
+
         <!-- Right column: allocation + add form -->
-        <div class="pf-right-col">
+        <div class="pf-right-col" id="pf-right-col">
           <div class="pf-chart-wrap">
             <div class="pf-chart-title">Allokation</div>
             <div class="pf-alloc-list" id="pf-alloc-list"></div>
@@ -1925,6 +1932,103 @@ function asClearSelection() {
 // Also allow typing a raw ticker directly in display field and confirming without modal
 // (fallback: if user presses Enter in display field → open modal)
 // Search button is a <button>, no extra listener needed
+
+// ── PANEL RESIZER ─────────────────────────────────────────────────────────────
+(function() {
+  var resizer  = null;
+  var rightCol = null;
+  var startX   = 0;
+  var startW   = 0;
+  var dragging = false;
+  var DEFAULT_WIDTH = 260;
+  var STORAGE_KEY   = 'investis_pf_right_width';
+
+  function init() {
+    resizer  = document.getElementById('pf-resizer');
+    rightCol = document.getElementById('pf-right-col');
+    if(!resizer || !rightCol) return;
+
+    // Restore saved width
+    var saved = parseInt(localStorage.getItem(STORAGE_KEY));
+    if(saved && saved >= 160 && saved <= 520) {
+      rightCol.style.width = saved + 'px';
+    }
+
+    resizer.addEventListener('mousedown', onMouseDown);
+    resizer.addEventListener('dblclick',  onDblClick);
+    resizer.addEventListener('touchstart', onTouchStart, {passive:false});
+  }
+
+  function onMouseDown(e) {
+    e.preventDefault();
+    startX  = e.clientX;
+    startW  = rightCol.offsetWidth;
+    dragging = true;
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup',   onMouseUp);
+  }
+
+  function onMouseMove(e) {
+    if(!dragging) return;
+    var delta = startX - e.clientX;   // drag left = wider right col
+    var newW  = Math.min(520, Math.max(160, startW + delta));
+    rightCol.style.width = newW + 'px';
+  }
+
+  function onMouseUp() {
+    dragging = false;
+    resizer.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    localStorage.setItem(STORAGE_KEY, rightCol.offsetWidth);
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup',   onMouseUp);
+  }
+
+  // Touch support
+  function onTouchStart(e) {
+    e.preventDefault();
+    startX = e.touches[0].clientX;
+    startW = rightCol.offsetWidth;
+    dragging = true;
+    resizer.classList.add('dragging');
+    document.addEventListener('touchmove',  onTouchMove, {passive:false});
+    document.addEventListener('touchend',   onTouchEnd);
+  }
+  function onTouchMove(e) {
+    e.preventDefault();
+    if(!dragging) return;
+    var delta = startX - e.touches[0].clientX;
+    var newW  = Math.min(520, Math.max(160, startW + delta));
+    rightCol.style.width = newW + 'px';
+  }
+  function onTouchEnd() {
+    dragging = false;
+    resizer.classList.remove('dragging');
+    localStorage.setItem(STORAGE_KEY, rightCol.offsetWidth);
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('touchend',  onTouchEnd);
+  }
+
+  function onDblClick() {
+    rightCol.style.width = DEFAULT_WIDTH + 'px';
+    localStorage.setItem(STORAGE_KEY, DEFAULT_WIDTH);
+  }
+
+  // Init after DOM ready (pf-resizer rendered by showTab)
+  document.addEventListener('click', function onFirstPortfolio(e) {
+    if(document.getElementById('pf-resizer') && !resizer) init();
+  });
+  // Also hook into showTab
+  var _pfInitOrig = window._pfInitialized;
+  var _checkInit = setInterval(function(){
+    if(document.getElementById('pf-resizer') && !resizer) { init(); clearInterval(_checkInit); }
+  }, 200);
+})();
+
 </script>
 
 </body>
