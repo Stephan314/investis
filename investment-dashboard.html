@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.0</title>
+<title>Investis Dashboard v7.1</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -102,6 +102,53 @@ select.form-input option{background:var(--bg3)}
 .btn-secondary{font-size:11px;padding:5px 12px;background:transparent;border:0.5px solid var(--border2);color:var(--muted);cursor:pointer;border-radius:3px;font-family:var(--mono);transition:all .1s}
 .btn-secondary:hover{color:var(--text);border-color:var(--text)}
 .btn-danger:hover{color:var(--red);border-color:var(--red)}
+/* ── ANALYSE MODAL ── */
+.analyse-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:flex-start;justify-content:flex-end;padding:0}
+.analyse-overlay.open{display:flex}
+.analyse-modal{width:480px;height:100vh;background:var(--bg2);border-left:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;animation:slideInRight .22s cubic-bezier(.4,0,.2,1)}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.am-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.am-title{font-family:var(--serif);font-style:italic;font-size:18px;color:var(--accent)}
+.am-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.am-close{font-size:14px;color:var(--muted);cursor:pointer;padding:4px 6px;background:none;border:none;font-family:var(--mono);transition:color .1s}
+.am-close:hover{color:var(--text)}
+.am-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.am-section-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px}
+.am-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.am-kpi{background:var(--bg3);border-radius:3px;padding:9px 10px}
+.am-kpi-label{font-size:9px;color:var(--muted);margin-bottom:3px}
+.am-kpi-val{font-size:16px;font-weight:500;color:var(--text)}
+.am-kpi-val.red{color:var(--red)}.am-kpi-val.green{color:var(--green)}.am-kpi-val.amber{color:var(--amber)}
+.am-score-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--border)}
+.am-score-row:last-child{border-bottom:none}
+.am-score-label{font-size:11px;color:var(--muted);flex:1}
+.am-bar-wrap{flex:1.2;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.am-bar-fill{height:5px;border-radius:3px;transition:width .4s ease}
+.am-score-num{font-size:10px;color:var(--muted);min-width:32px;text-align:right}
+.am-signal-row{display:flex;gap:8px}
+.am-signal-box{flex:1;border-radius:3px;padding:10px 12px;border:0.5px solid}
+.am-signal-box.sell{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25)}
+.am-signal-box.hold{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.25)}
+.am-signal-box.buy{background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)}
+.am-signal-box.watch{background:rgba(96,165,250,.08);border-color:rgba(96,165,250,.25)}
+.am-signal-title{font-size:11px;font-weight:500;margin-bottom:4px}
+.am-signal-box.sell .am-signal-title{color:var(--red)}.am-signal-box.hold .am-signal-title{color:var(--amber)}
+.am-signal-box.buy .am-signal-title{color:var(--green)}.am-signal-box.watch .am-signal-title{color:var(--blue)}
+.am-signal-text{font-size:10px;color:var(--muted);line-height:1.5}
+.am-ai-box{background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:12px;min-height:80px;font-size:11px;line-height:1.6;color:var(--text);white-space:pre-wrap}
+.am-ai-box.loading{color:var(--muted);font-style:italic}
+.am-ai-box.error{color:var(--red)}
+.am-footer{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
+.am-run-btn{flex:1;padding:7px;background:rgba(200,184,154,.1);border:0.5px solid rgba(200,184,154,.4);color:var(--accent);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px;transition:all .1s}
+.am-run-btn:hover{background:rgba(200,184,154,.2)}
+.am-run-btn:disabled{opacity:.4;cursor:not-allowed}
+.am-chart-btn{padding:7px 12px;background:transparent;border:0.5px solid var(--border2);color:var(--muted);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px;transition:all .1s}
+.am-chart-btn:hover{color:var(--text);border-color:var(--accent)}
+.analyse-btn{font-size:9px;padding:2px 7px;background:rgba(200,184,154,.08);border:0.5px solid rgba(200,184,154,.3);color:var(--accent);cursor:pointer;border-radius:2px;font-family:var(--mono);white-space:nowrap;transition:all .1s}
+.analyse-btn:hover{background:rgba(200,184,154,.18);border-color:var(--accent)}
+.am-total-score{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:3px;padding:10px 12px;border-left:2px solid var(--accent)}
+.am-total-label{font-size:11px;color:var(--muted)}
+.am-total-val{font-size:16px;font-weight:500;color:var(--accent)}
 .form-hint{font-size:10px;color:var(--dim)}
 .chart-wrap{flex:1;display:flex;overflow:hidden}
 .chart-main{flex:1;position:relative;background:var(--bg)}
@@ -188,7 +235,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.0</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.1</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -217,7 +264,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v6.1</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.1</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -263,6 +310,7 @@ select.form-input option{background:var(--bg3)}
               <th onclick="sortBy('exchange')">Börse</th>
               <th onclick="sortBy('signal')">Signal</th>
               <th>Notiz</th>
+              <th></th>
             </tr></thead>
             <tbody id="wl-body"></tbody>
           </table>
@@ -550,6 +598,7 @@ function renderTable() {
     html += '<td style="font-size:10px;color:var(--muted)">' + s.exch + '</td>';
     html += '<td><span class="signal-chip ' + sc + '">' + (SIG_TXT[s.signal]||'\u2013') + '</span></td>';
     html += '<td class="note-cell">' + noteTxt + '</td>';
+    html += '<td onclick="event.stopPropagation()"><button class="analyse-btn" onclick="openAnalyse(\'' + s.tk + '\',event)">⊕ Analyse</button></td>';
     html += '</tr>';
   });
   document.getElementById('wl-body').innerHTML = html;
@@ -662,6 +711,7 @@ function renderMyTable() {
     html += '<td style="font-size:10px;color:var(--muted)">' + s.exch + '</td>';
     html += '<td><span class="signal-chip ' + sc + '">' + (SIG_TXT[s.signal]||'–') + '</span></td>';
     html += '<td class="note-cell">' + (s.aiNote||s.note) + '</td>';
+    html += '<td onclick="event.stopPropagation()"><button class="analyse-btn" onclick="openAnalyse(\'' + s.tk + '\',event)">⊕ Analyse</button></td>';
     html += '<td style="display:flex;gap:6px">';
     html += '<span class="del-btn" style="color:var(--accent)" title="Bearbeiten" onclick="event.stopPropagation();editCustomAsset(\'' + s.tk + '\')">✎</span>';
     html += '<span class="del-btn" title="Löschen" onclick="event.stopPropagation();removeCustomAsset(\'' + s.tk + '\')">✕</span>';
@@ -1077,6 +1127,226 @@ renderMyTable();
 renderMatrix();
 renderSidebar();
 renderKnowledge();
+</script>
+
+<!-- ── ANALYSE MODAL ───────────────────────── -->
+<div class="analyse-overlay" id="analyse-overlay" onclick="if(event.target===this)closeAnalyse()">
+  <div class="analyse-modal" id="analyse-modal">
+    <div class="am-header">
+      <div>
+        <div class="am-title" id="am-ticker">—</div>
+        <div class="am-sub" id="am-name">Einzelwert-Analyse</div>
+      </div>
+      <button class="am-close" onclick="closeAnalyse()">✕</button>
+    </div>
+    <div class="am-body">
+      <!-- KPIs -->
+      <div>
+        <div class="am-section-title">Kennzahlen</div>
+        <div class="am-kpi-grid" id="am-kpis"></div>
+      </div>
+      <!-- Scoring -->
+      <div>
+        <div class="am-section-title">Bewertungsrahmen</div>
+        <div id="am-scores"></div>
+        <div class="am-total-score" id="am-total" style="margin-top:8px">
+          <span class="am-total-label">Gesamtscore</span>
+          <span class="am-total-val" id="am-total-val">—</span>
+        </div>
+      </div>
+      <!-- Signal scenarios -->
+      <div>
+        <div class="am-section-title">Szenarien</div>
+        <div class="am-signal-row" id="am-signals"></div>
+      </div>
+      <!-- AI analysis -->
+      <div>
+        <div class="am-section-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>KI-Analyse</span>
+          <span style="font-size:9px;color:var(--dim)" id="am-ai-ts">—</span>
+        </div>
+        <div class="am-ai-box loading" id="am-ai-box">Noch nicht geladen — „KI analysieren" klicken.</div>
+      </div>
+    </div>
+    <div class="am-footer">
+      <button class="am-run-btn" id="am-run-btn" onclick="runAnalyse()">✦ KI analysieren</button>
+      <button class="am-chart-btn" id="am-chart-btn" onclick="openChartFromAnalyse()">↗ Chart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var amTicker = null;
+
+function openAnalyse(tk, event) {
+  if(event) event.stopPropagation();
+  var s = allAssets().find(function(a){ return a.tk===tk; });
+  if(!s) return;
+  amTicker = tk;
+
+  document.getElementById('am-ticker').textContent = s.tk;
+  document.getElementById('am-name').textContent = s.nm + ' · ' + s.exch + ' · ' + s.sec;
+
+  // KPIs
+  var kpiDefs = [
+    {l:'Kurs', v: s.livePrice ? s.livePrice+' $' : '–', c: ''},
+    {l:'Änd. heute', v: s.liveChange ? (parseFloat(s.liveChange)>=0?'+':'')+s.liveChange+'%' : '–',
+      c: s.liveChange ? (parseFloat(s.liveChange)>=0?'green':'red') : ''},
+    {l:'ADR%', v: s.adr>0 ? s.adr.toFixed(1)+'%' : '–', c: s.adr>=7?'green':s.adr>=5?'amber':''},
+    {l:'KGV', v: s.pe||'–', c: s.pe ? (s.pe<20?'green':s.pe<40?'amber':'red') : ''},
+    {l:'KBV', v: s.pb||'–', c: s.pb ? (s.pb<2?'green':s.pb<5?'amber':'red') : ''},
+    {l:'Beta', v: s.beta ? s.beta.toFixed(1) : '–', c: s.beta ? (s.beta<1.2?'green':s.beta<2?'amber':'red') : ''},
+  ];
+  var kpiHtml = kpiDefs.map(function(k){
+    return '<div class="am-kpi"><div class="am-kpi-label">'+k.l+'</div><div class="am-kpi-val '+k.c+'">'+k.v+'</div></div>';
+  }).join('');
+  document.getElementById('am-kpis').innerHTML = kpiHtml;
+
+  // Scoring dimensions
+  var scores = buildScores(s);
+  var scHtml = scores.map(function(sc){
+    var pct = Math.round(sc.val * 100);
+    var col = pct>=65 ? 'var(--green)' : pct>=35 ? 'var(--amber)' : 'var(--red)';
+    return '<div class="am-score-row">'
+      +'<span class="am-score-label">'+sc.label+'</span>'
+      +'<div class="am-bar-wrap"><div class="am-bar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'
+      +'<span class="am-score-num">'+pct+' / 100</span>'
+      +'</div>';
+  }).join('');
+  document.getElementById('am-scores').innerHTML = scHtml;
+
+  var total = Math.round(scores.reduce(function(a,s){return a+s.val;},0)/scores.length*100);
+  var totalCol = total>=65?'var(--green)':total>=40?'var(--amber)':'var(--red)';
+  document.getElementById('am-total-val').textContent = total + ' / 100';
+  document.getElementById('am-total-val').style.color = totalCol;
+
+  // Signal scenarios
+  var scenDefs = buildScenarios(s, total);
+  var sigHtml = scenDefs.map(function(sc){
+    return '<div class="am-signal-box '+sc.cls+'" style="flex:1">'
+      +'<div class="am-signal-title">'+sc.title+'</div>'
+      +'<div class="am-signal-text">'+sc.text+'</div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('am-signals').innerHTML = sigHtml;
+
+  // Reset AI
+  var aiBox = document.getElementById('am-ai-box');
+  aiBox.className = 'am-ai-box loading';
+  aiBox.textContent = 'Noch nicht geladen — „KI analysieren" klicken.';
+  document.getElementById('am-ai-ts').textContent = '—';
+  document.getElementById('am-run-btn').disabled = false;
+  document.getElementById('am-run-btn').textContent = '✦ KI analysieren';
+
+  // Open overlay
+  document.getElementById('analyse-overlay').classList.add('open');
+}
+
+function closeAnalyse() {
+  document.getElementById('analyse-overlay').classList.remove('open');
+  amTicker = null;
+}
+
+function openChartFromAnalyse() {
+  if(amTicker) { closeAnalyse(); openChart(amTicker); }
+}
+
+function buildScores(s) {
+  var scores = [];
+  // Wachstum / ADR als Proxy für Dynamik
+  scores.push({label:'Marktdynamik (ADR)', val: Math.min((s.adr||0)/12, 1)});
+  // Bewertung via KGV: fair < 25, günstig < 15
+  if(s.pe != null) {
+    var peScore = s.pe<=0 ? 0.1 : s.pe<15 ? 0.9 : s.pe<25 ? 0.75 : s.pe<40 ? 0.5 : s.pe<80 ? 0.3 : 0.1;
+    scores.push({label:'Bewertung (KGV)', val: peScore});
+  } else {
+    scores.push({label:'Bewertung (KGV)', val: 0.5});
+  }
+  // KBV
+  if(s.pb != null) {
+    var pbScore = s.pb<1 ? 0.9 : s.pb<3 ? 0.75 : s.pb<6 ? 0.55 : s.pb<12 ? 0.35 : 0.15;
+    scores.push({label:'Substanzwert (KBV)', val: pbScore});
+  }
+  // Beta: moderat gut, sehr hoch oder sehr niedrig schlechter
+  if(s.beta != null) {
+    var bScore = s.beta<0.5 ? 0.45 : s.beta<1.2 ? 0.8 : s.beta<2 ? 0.6 : s.beta<3 ? 0.35 : 0.15;
+    scores.push({label:'Risikomaß (Beta)', val: bScore});
+  }
+  // Momentum via liveChange
+  if(s.liveChange != null) {
+    var chg = parseFloat(s.liveChange);
+    var momScore = chg>3?0.85:chg>1?0.7:chg>0?0.6:chg>-1?0.45:chg>-3?0.3:0.15;
+    scores.push({label:'Momentum (heute)', val: momScore});
+  }
+  // Signal-Qualität
+  var sigScore = {buy:0.85, watch:0.6, hold:0.45, avoid:0.15}[s.signal] || 0.5;
+  scores.push({label:'Signal-Bewertung', val: sigScore});
+  return scores;
+}
+
+function buildScenarios(s, total) {
+  var sig = s.signal;
+  var scenarios = [];
+  if(total >= 60 || sig === 'buy') {
+    scenarios.push({cls:'buy', title:'Kaufen / Aufstocken',
+      text:'Score und Kennzahlen sprechen für eine Position. Entry bei aktuellem Niveau prüfen. Stop-Loss: 1,5–2x ATR unter Einstieg.'});
+  } else {
+    scenarios.push({cls:'hold', title:'Abwarten',
+      text:'Kein klares Kaufsignal. Auf Rücksetzer oder Ausbruch warten. Beobachtungsliste.'});
+  }
+  if(sig === 'avoid' || total < 35) {
+    scenarios.push({cls:'sell', title:'Meiden / Reduzieren',
+      text:'Schwache Fundamentals oder Trend. Falls Position vorhanden: Stopp nachziehen oder Teilverkauf prüfen.'});
+  } else if(sig === 'hold') {
+    scenarios.push({cls:'hold', title:'Halten mit Stopp',
+      text:'Trend intakt, aber kein Aufbau. Trailing Stop nachziehen. R:R-Ratio laufend prüfen.'});
+  } else {
+    scenarios.push({cls:'watch', title:'Beobachten',
+      text:'Interessantes Setup, aber kein idealer Entry. Auf Bestätigung warten (Volumen, MA-Kreuzer).'});
+  }
+  return scenarios;
+}
+
+async function runAnalyse() {
+  if(!amTicker) return;
+  var s = allAssets().find(function(a){ return a.tk===amTicker; });
+  if(!s) return;
+  var btn = document.getElementById('am-run-btn');
+  var box = document.getElementById('am-ai-box');
+  btn.disabled = true; btn.textContent = '~ Läuft...';
+  box.className = 'am-ai-box loading'; box.textContent = 'Claude analysiert...';
+
+  var nl = '\n';
+  var prompt = 'Analysiere dieses Asset ausführlich auf Deutsch. Keine Markdown-Formatierung.' + nl + nl
+    + 'Ticker: ' + s.tk + nl
+    + 'Name: ' + s.nm + nl
+    + 'Sektor: ' + s.sec + nl
+    + 'Börse: ' + s.exch + nl
+    + 'ADR: ' + s.adr + '%' + nl
+    + 'Signal: ' + s.signal + nl
+    + (s.pe != null ? 'KGV: ' + s.pe + nl : '')
+    + (s.pb != null ? 'KBV: ' + s.pb + nl : '')
+    + (s.beta != null ? 'Beta: ' + s.beta + nl : '')
+    + (s.livePrice ? 'Kurs: ' + s.livePrice + ' $ (Änderung heute: ' + (s.liveChange||'k.A.') + '%)' + nl : '')
+    + 'Notiz: ' + (s.aiNote||s.note) + nl + nl
+    + 'Bitte analysiere in 4 Abschnitten mit diesen Überschriften (keine Sternchen oder Markdown):' + nl
+    + '1. Aktuelle Lage' + nl
+    + '2. Technisches Bild' + nl
+    + '3. Risiken' + nl
+    + '4. Handlungsempfehlung' + nl + nl
+    + 'Max 250 Wörter. Sachlich und präzise.';
+
+  try {
+    var text = await callClaude(prompt);
+    box.className = 'am-ai-box';
+    box.textContent = text;
+    document.getElementById('am-ai-ts').textContent = new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    box.className = 'am-ai-box error';
+    box.textContent = 'Fehler: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '✦ Neu analysieren';
+}
 </script>
 </body>
 </html>
