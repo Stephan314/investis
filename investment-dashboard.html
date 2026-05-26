@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.8</title>
+<title>Investis Dashboard v7.9</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -302,7 +302,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.8</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.9</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -333,7 +333,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.8</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.9</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -1613,6 +1613,45 @@ showTab = function(name) {
     <div class="as-modal-body" id="as-modal-body">
       <div class="as-empty">Suchbegriff eingeben um Assets zu finden.</div>
     </div>
+    <!-- Manual entry fallback -->
+    <div id="as-manual-wrap" style="padding:10px 16px;border-top:0.5px solid var(--border);background:var(--bg3);display:none;flex-direction:column;gap:8px">
+      <div style="font-size:10px;color:var(--muted)">Nicht gefunden? Manuell eingeben:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div>
+          <div style="font-size:9px;color:var(--dim);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Ticker / WKN *</div>
+          <input class="as-modal-search" id="as-man-tk" placeholder="z.B. A3D9M1" style="padding:5px 8px;font-size:11px" oninput="asManualCheck()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--dim);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Name *</div>
+          <input class="as-modal-search" id="as-man-nm" placeholder="z.B. VanEck Defence" style="padding:5px 8px;font-size:11px" oninput="asManualCheck()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--dim);margin-bottom:3px;text-transform:uppercase;letter-spacing:.07em">Börse</div>
+          <select id="as-man-exch" class="as-modal-search" style="padding:5px 8px;font-size:11px">
+            <option value="XETRA">XETRA (DE)</option>
+            <option value="AMS">Amsterdam</option>
+            <option value="NASDAQ" selected>NASDAQ (US)</option>
+            <option value="NYSE">NYSE (US)</option>
+            <option value="LSE">London (LSE)</option>
+            <option value="TSX">Toronto (TSX)</option>
+            <option value="SWX">Zürich (SWX)</option>
+            <option value="GETTEX">Gettex (DE)</option>
+            <option value="OTC">OTC / Sonstige</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div style="font-size:9px;color:var(--dim)">Typ:</div>
+        <select id="as-man-type" class="as-modal-search" style="padding:3px 8px;font-size:11px;width:auto">
+          <option value="ETF">ETF</option>
+          <option value="Aktie">Aktie</option>
+          <option value="ETC">ETC / Rohstoff</option>
+          <option value="Anleihe">Anleihe</option>
+          <option value="Sonstiges">Sonstiges</option>
+        </select>
+        <button class="as-confirm-btn" id="as-man-btn" onclick="asManualConfirm()" disabled style="margin-left:auto">Manuell übernehmen ✓</button>
+      </div>
+    </div>
     <div class="as-modal-footer">
       <div class="as-selected-preview" id="as-selected-preview">Noch kein Asset gewählt</div>
       <button class="as-cancel-btn" onclick="asCloseModal()">Abbrechen</button>
@@ -1719,7 +1758,37 @@ const AS_EXCHANGES = {
   // Canadian
   'AIDX': [{tk:'AIDX', nm:'Healwell AI',   exch:'TSX',   type:'Aktie', fmpTk:'AIDX.TO'},
            {tk:'HWAIF',nm:'Healwell AI',   exch:'OTCQX', type:'Aktie', fmpTk:'HWAIF'}],
-  // ETFs
+  // ETFs — Europäische / XETRA
+  'VWCE': [{tk:'VWCE', nm:'Vanguard FTSE All-World Acc',    exch:'XETRA', type:'ETF', fmpTk:'VWCE.DE'}],
+  'VGWL': [{tk:'VGWL', nm:'Vanguard FTSE All-World Dist',   exch:'XETRA', type:'ETF', fmpTk:'VGWL.DE'}],
+  'IWDA': [{tk:'IWDA', nm:'iShares Core MSCI World',        exch:'AMS',   type:'ETF', fmpTk:'IWDA.AS'}],
+  'CSPX': [{tk:'CSPX', nm:'iShares Core S&P 500 Acc',       exch:'LSE',   type:'ETF', fmpTk:'CSPX.L'}],
+  'EXXT': [{tk:'EXXT', nm:'iShares Nasdaq-100 UCITS ETF',   exch:'XETRA', type:'ETF', fmpTk:'EXXT.DE'}],
+  'EQQQ': [{tk:'EQQQ', nm:'Invesco Nasdaq-100 UCITS ETF',   exch:'XETRA', type:'ETF', fmpTk:'EQQQ.DE'}],
+  'IUSQ': [{tk:'IUSQ', nm:'iShares MSCI ACWI UCITS ETF',    exch:'XETRA', type:'ETF', fmpTk:'IUSQ.DE'}],
+  'SPYD': [{tk:'SPYD', nm:'SPDR S&P 500 High Dividend',     exch:'XETRA', type:'ETF', fmpTk:'SPYD.DE'}],
+  'EXS1': [{tk:'EXS1', nm:'iShares Core DAX UCITS ETF',     exch:'XETRA', type:'ETF', fmpTk:'EXS1.DE'}],
+  'DBXD': [{tk:'DBXD', nm:'Xtrackers DAX UCITS ETF',        exch:'XETRA', type:'ETF', fmpTk:'DBXD.DE'}],
+  'XDEW': [{tk:'XDEW', nm:'Xtrackers MSCI World Value',     exch:'XETRA', type:'ETF', fmpTk:'XDEW.DE'}],
+  'SPPW': [{tk:'SPPW', nm:'SPDR MSCI World UCITS ETF',      exch:'XETRA', type:'ETF', fmpTk:'SPPW.DE'}],
+  'DFEN': [{tk:'DFEN', nm:'Direxion Daily Aerospace 3x',    exch:'NYSE',  type:'ETF', fmpTk:'DFEN'}],
+  'ITA':  [{tk:'ITA',  nm:'iShares US Aerospace & Defense', exch:'NYSE',  type:'ETF', fmpTk:'ITA'}],
+  'XAR':  [{tk:'XAR',  nm:'SPDR S&P Aerospace & Defense',   exch:'NYSE',  type:'ETF', fmpTk:'XAR'}],
+  'EUAD': [{tk:'EUAD', nm:'VanEck Defence UCITS ETF',       exch:'XETRA', type:'ETF', fmpTk:'EUAD.DE'},
+           {tk:'EUAD', nm:'VanEck Defence UCITS ETF',       exch:'AMS',   type:'ETF', fmpTk:'EUAD.AS'}],
+  'AERO': [{tk:'AERO', nm:'Global X Defense Tech ETF',      exch:'NASDAQ',type:'ETF', fmpTk:'AERO'}],
+  'MILI': [{tk:'MILI', nm:'iShares Global Defence ETF',     exch:'LSE',   type:'ETF', fmpTk:'MILI.L'}],
+  'WCLD': [{tk:'WCLD', nm:'WisdomTree Cloud Computing ETF', exch:'NASDAQ',type:'ETF', fmpTk:'WCLD'}],
+  'CLOU': [{tk:'CLOU', nm:'Global X Cloud Computing ETF',   exch:'NASDAQ',type:'ETF', fmpTk:'CLOU'}],
+  'BOTZ': [{tk:'BOTZ', nm:'Global X Robotics & AI ETF',     exch:'NASDAQ',type:'ETF', fmpTk:'BOTZ'}],
+  'ROBO': [{tk:'ROBO', nm:'Robo Global Robotics ETF',       exch:'NYSE',  type:'ETF', fmpTk:'ROBO'}],
+  'ARKK': [{tk:'ARKK', nm:'ARK Innovation ETF',             exch:'NYSE',  type:'ETF', fmpTk:'ARKK'}],
+  'ARKG': [{tk:'ARKG', nm:'ARK Genomic Revolution ETF',     exch:'NYSE',  type:'ETF', fmpTk:'ARKG'}],
+  'GLD':  [{tk:'GLD',  nm:'SPDR Gold Shares ETF',           exch:'NYSE',  type:'ETF', fmpTk:'GLD'}],
+  'SLV':  [{tk:'SLV',  nm:'iShares Silver Trust',           exch:'NYSE',  type:'ETF', fmpTk:'SLV'}],
+  'XGLD': [{tk:'XGLD', nm:'Xtrackers Physical Gold ETC',    exch:'XETRA', type:'ETF', fmpTk:'XGLD.DE'}],
+  'EXV6': [{tk:'EXV6', nm:'iShares STOXX Europe 600 ETF',   exch:'XETRA', type:'ETF', fmpTk:'EXV6.DE'}],
+  // ETFs — US
   'PDBC': [{tk:'PDBC', nm:'Invesco Diversified Commodity',exch:'NASDAQ',type:'ETF',fmpTk:'PDBC'}],
   'GSG':  [{tk:'GSG',  nm:'iShares S&P GSCI Commodity',  exch:'NYSE',  type:'ETF',fmpTk:'GSG'}],
   'SPY':  [{tk:'SPY',  nm:'SPDR S&P 500 ETF',            exch:'NYSE',  type:'ETF',fmpTk:'SPY'}],
@@ -1797,11 +1866,17 @@ function asRenderResults(results, query) {
   var body = document.getElementById('as-modal-body');
   var statusEl = document.getElementById('as-modal-status');
   if(!results.length) {
-    body.innerHTML='<div class="as-empty">Keine Ergebnisse für „'+escHtml(query)+'".<br><span style="font-size:10px;color:var(--dim)">Tipp: Direkten Ticker eingeben (z.B. AAPL) — dann wird er trotzdem akzeptiert.</span></div>';
+    body.innerHTML='<div class="as-empty" style="padding:16px">Kein Eintrag für „'+escHtml(query)+'" gefunden.<br><span style="font-size:10px;color:var(--dim)">Nutze das manuelle Formular unten um das Asset direkt einzutragen.</span></div>';
     statusEl.textContent='0 Ergebnisse';
+    // Pre-fill manual ticker field with the query
+    var manTk = document.getElementById('as-man-tk');
+    if(manTk && !manTk.value) manTk.value = query.toUpperCase();
+    document.getElementById('as-manual-wrap').style.display='flex';
+    asManualCheck();
     return;
   }
-  statusEl.textContent = results.length + ' Ergebnis' + (results.length===1?'':'se');
+  statusEl.innerHTML = results.length + ' Ergebnis' + (results.length===1?'':'se')
+    + ' &nbsp;<span style="cursor:pointer;color:var(--accent);font-size:9px" onclick="asToggleManual()" title="Manuell eingeben">+ Manuell eingeben</span>';
 
   // Group by ticker name
   var groups = {};
@@ -1881,6 +1956,9 @@ function asOpenModal() {
   document.getElementById('as-modal-overlay').classList.add('open');
   document.getElementById('as-modal-input').value = '';
   document.getElementById('as-modal-body').innerHTML='<div class="as-empty">Suchbegriff eingeben um Assets zu finden.</div>';
+  document.getElementById('as-manual-wrap').style.display='none';
+  document.getElementById('as-man-tk').value='';
+  document.getElementById('as-man-nm').value='';
   document.getElementById('as-modal-status').textContent='Tippen zum Suchen…';
   document.getElementById('as-selected-preview').textContent='Noch kein Asset gewählt';
   document.getElementById('as-confirm-btn').disabled=true;
@@ -1931,6 +2009,33 @@ function asClearSelection() {
 
 // Also allow typing a raw ticker directly in display field and confirming without modal
 // (fallback: if user presses Enter in display field → open modal)
+
+function asToggleManual() {
+  var w = document.getElementById('as-manual-wrap');
+  w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+  if(w.style.display==='flex') {
+    setTimeout(function(){ document.getElementById('as-man-tk').focus(); }, 50);
+  }
+}
+
+function asManualCheck() {
+  var tk = (document.getElementById('as-man-tk').value||'').trim();
+  var nm = (document.getElementById('as-man-nm').value||'').trim();
+  var btn = document.getElementById('as-man-btn');
+  if(btn) btn.disabled = !(tk && nm);
+}
+
+function asManualConfirm() {
+  var tk   = (document.getElementById('as-man-tk').value||'').trim().toUpperCase();
+  var nm   = (document.getElementById('as-man-nm').value||'').trim();
+  var exch = document.getElementById('as-man-exch').value;
+  var type = document.getElementById('as-man-type').value;
+  if(!tk || !nm) return;
+  // Use as selected and confirm
+  asSelected = { tk: tk, nm: nm, exch: exch, type: type, fmpTk: tk };
+  asConfirm();
+}
+
 // Search button is a <button>, no extra listener needed
 
 // ── PANEL RESIZER ─────────────────────────────────────────────────────────────
