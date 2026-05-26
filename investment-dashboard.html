@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.1</title>
+<title>Investis Dashboard v7.2</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -232,12 +232,55 @@ select.form-input option{background:var(--bg3)}
 .pf-two-col{display:grid;grid-template-columns:1fr 300px;gap:12px;flex:1;min-height:0;overflow:hidden}
 .pf-two-col .pf-wrap{overflow:auto}
 .pf-right-col{display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+
+/* ── ASSET SEARCH POPUP ── */
+.as-search-wrap{position:relative}
+.as-search-input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:5px 28px 5px 8px;font-size:11px;font-family:var(--mono);color:var(--text);outline:none;transition:border-color .1s}
+.as-search-input:focus{border-color:var(--accent)}
+.as-search-input::placeholder{color:var(--dim)}
+.as-search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--dim);cursor:pointer;line-height:1;background:none;border:none;padding:0;font-family:var(--mono)}
+.as-search-clear:hover{color:var(--text)}
+/* Modal overlay */
+.as-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:center;justify-content:center}
+.as-modal-overlay.open{display:flex}
+.as-modal{width:520px;max-height:80vh;background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:asModalIn .18s cubic-bezier(.4,0,.2,1)}
+@keyframes asModalIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+.as-modal-header{padding:14px 16px 10px;border-bottom:0.5px solid var(--border);flex-shrink:0}
+.as-modal-title{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--accent);margin-bottom:8px}
+.as-modal-search{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:7px 10px;font-size:12px;font-family:var(--mono);color:var(--text);outline:none;transition:border-color .15s}
+.as-modal-search:focus{border-color:var(--accent)}
+.as-modal-search::placeholder{color:var(--dim)}
+.as-modal-status{font-size:10px;color:var(--muted);margin-top:6px;min-height:14px}
+.as-modal-body{flex:1;overflow-y:auto;padding:8px}
+.as-result-group{margin-bottom:4px}
+.as-result-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);padding:6px 8px 3px}
+.as-result-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:3px;cursor:pointer;transition:background .1s}
+.as-result-item:hover{background:rgba(255,255,255,.04)}
+.as-result-item.selected{background:rgba(200,184,154,.08);border:0.5px solid rgba(200,184,154,.2)}
+.as-result-ticker{font-weight:500;color:var(--accent);font-size:12px;min-width:64px}
+.as-result-name{flex:1;font-size:11px;color:var(--text)}
+.as-result-exch{font-size:9px;color:var(--muted);min-width:60px;text-align:right}
+.as-result-type{font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(200,184,154,.1);color:var(--accent)}
+.as-exch-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.as-exch-btn{font-size:10px;padding:4px 10px;background:var(--bg3);border:0.5px solid var(--border2);color:var(--muted);cursor:pointer;border-radius:12px;font-family:var(--mono);transition:all .1s}
+.as-exch-btn:hover{border-color:var(--accent);color:var(--text)}
+.as-exch-btn.active{background:rgba(200,184,154,.12);border-color:var(--accent);color:var(--accent)}
+.as-modal-footer{padding:10px 16px;border-top:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+.as-selected-preview{flex:1;font-size:11px;color:var(--muted)}
+.as-selected-preview span{color:var(--accent);font-weight:500}
+.as-confirm-btn{padding:7px 18px;background:rgba(200,184,154,.12);border:0.5px solid rgba(200,184,154,.5);color:var(--accent);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px;transition:all .1s}
+.as-confirm-btn:hover{background:rgba(200,184,154,.22)}
+.as-confirm-btn:disabled{opacity:.35;cursor:not-allowed}
+.as-cancel-btn{padding:7px 12px;background:transparent;border:0.5px solid var(--border2);color:var(--muted);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px;transition:all .1s}
+.as-cancel-btn:hover{color:var(--text);border-color:var(--text)}
+.as-empty{padding:24px;text-align:center;color:var(--dim);font-size:11px}
+.as-loading{padding:16px;text-align:center;color:var(--muted);font-size:11px}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.1</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.2</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -268,7 +311,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.1</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.2</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -456,8 +499,15 @@ select.form-input option{background:var(--bg3)}
           <div class="pf-add-row">
             <div class="pf-add-title">Position hinzufügen</div>
             <div class="pf-add-grid">
-              <div class="form-field"><label class="form-label">Ticker *</label><input class="form-input" id="pf-f-tk" placeholder="z.B. AAPL" maxlength="10" style="text-transform:uppercase"></div>
-              <div class="form-field"><label class="form-label">Name</label><input class="form-input" id="pf-f-nm" placeholder="z.B. Apple Inc."></div>
+              <div class="form-field" style="grid-column:span 2">
+                <label class="form-label">Asset suchen *</label>
+                <div class="as-search-wrap">
+                  <input class="as-search-input" id="pf-f-search-display" placeholder="Name oder Ticker eingeben…" readonly onclick="asOpenModal()" style="cursor:pointer">
+                  <button class="as-search-clear" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none">✕</button>
+                </div>
+                <input type="hidden" id="pf-f-tk">
+                <input type="hidden" id="pf-f-nm">
+              </div>
               <div class="form-field"><label class="form-label">Stück *</label><input class="form-input" id="pf-f-qty" type="number" placeholder="10" min="0.001" step="any"></div>
               <div class="form-field"><label class="form-label">Einstiegspreis *</label><input class="form-input" id="pf-f-avg" type="number" placeholder="150.00" min="0" step="any"></div>
               <div class="form-field"><label class="form-label">Währung</label>
@@ -1326,6 +1376,7 @@ function pfAddPosition() {
   pfRender();
   // Clear form
   ['pf-f-tk','pf-f-nm','pf-f-qty','pf-f-avg','pf-f-note'].forEach(function(id){ document.getElementById(id).value=''; });
+  asClearSelection();
   showToast(tk + ' hinzugefügt ✓');
 }
 
@@ -1511,5 +1562,310 @@ showTab = function(name) {
 };
 
 </script>
+
+<!-- ── ASSET SEARCH MODAL ───────────────────────────────────── -->
+<div class="as-modal-overlay" id="as-modal-overlay" onclick="if(event.target===this)asCloseModal()">
+  <div class="as-modal">
+    <div class="as-modal-header">
+      <div class="as-modal-title">Asset suchen</div>
+      <input class="as-modal-search" id="as-modal-input" placeholder="Name oder Ticker — z.B. Apple, AAPL, SAP, Nvidia…" oninput="asOnInput(this.value)" onkeydown="asKeyNav(event)" autocomplete="off">
+      <div class="as-modal-status" id="as-modal-status">Tippen zum Suchen…</div>
+    </div>
+    <div class="as-modal-body" id="as-modal-body">
+      <div class="as-empty">Suchbegriff eingeben um Assets zu finden.</div>
+    </div>
+    <div class="as-modal-footer">
+      <div class="as-selected-preview" id="as-selected-preview">Noch kein Asset gewählt</div>
+      <button class="as-cancel-btn" onclick="asCloseModal()">Abbrechen</button>
+      <button class="as-confirm-btn" id="as-confirm-btn" onclick="asConfirm()" disabled>Auswählen ✓</button>
+    </div>
+  </div>
+</div>
+
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ASSET SEARCH MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+var asSelected    = null;   // {tk, nm, exch, type}
+var asSearchTimer = null;
+var asFocusIdx    = -1;
+var asLastResults = [];
+
+// Known exchange listings for common assets
+// Each entry: {tk, nm, exch, type, suffix}
+// suffix = what to append to ticker for FMP (e.g. ".DE" for Xetra)
+const AS_EXCHANGES = {
+  // Xetra / German
+  'SAP':  [{tk:'SAP',  nm:'SAP SE',      exch:'XETRA', type:'Aktie', fmpTk:'SAP.DE'},
+           {tk:'SAP',  nm:'SAP SE',       exch:'NYSE',  type:'ADR',   fmpTk:'SAP'}],
+  'SIE':  [{tk:'SIE',  nm:'Siemens AG',   exch:'XETRA', type:'Aktie', fmpTk:'SIE.DE'}],
+  'ALV':  [{tk:'ALV',  nm:'Allianz SE',   exch:'XETRA', type:'Aktie', fmpTk:'ALV.DE'}],
+  'EOAN': [{tk:'EOAN', nm:'E.ON SE',      exch:'XETRA', type:'Aktie', fmpTk:'EOAN.DE'}],
+  'RWE':  [{tk:'RWE',  nm:'RWE AG',       exch:'XETRA', type:'Aktie', fmpTk:'RWE.DE'}],
+  'RHM':  [{tk:'RHM',  nm:'Rheinmetall',  exch:'XETRA', type:'Aktie', fmpTk:'RHM.DE'}],
+  'MBG':  [{tk:'MBG',  nm:'Mercedes-Benz',exch:'XETRA', type:'Aktie', fmpTk:'MBG.DE'}],
+  'BMW':  [{tk:'BMW',  nm:'BMW AG',        exch:'XETRA', type:'Aktie', fmpTk:'BMW.DE'}],
+  'VOW3': [{tk:'VOW3', nm:'Volkswagen VZ', exch:'XETRA', type:'Aktie', fmpTk:'VOW3.DE'}],
+  'DTE':  [{tk:'DTE',  nm:'Deutsche Telekom',exch:'XETRA',type:'Aktie',fmpTk:'DTE.DE'}],
+  'DBK':  [{tk:'DBK',  nm:'Deutsche Bank', exch:'XETRA', type:'Aktie', fmpTk:'DBK.DE'}],
+  'MRK':  [{tk:'MRK',  nm:'Merck KGaA',   exch:'XETRA', type:'Aktie', fmpTk:'MRK.DE'}],
+  'HNR1': [{tk:'HNR1', nm:'Hannover Rück', exch:'XETRA', type:'Aktie', fmpTk:'HNR1.DE'}],
+  'BAYN': [{tk:'BAYN', nm:'Bayer AG',      exch:'XETRA', type:'Aktie', fmpTk:'BAYN.DE'}],
+  'BAS':  [{tk:'BAS',  nm:'BASF SE',       exch:'XETRA', type:'Aktie', fmpTk:'BAS.DE'}],
+  'ADS':  [{tk:'ADS',  nm:'Adidas AG',     exch:'XETRA', type:'Aktie', fmpTk:'ADS.DE'}],
+  'HEN3': [{tk:'HEN3', nm:'Henkel VZ',     exch:'XETRA', type:'Aktie', fmpTk:'HEN3.DE'}],
+  'MTX':  [{tk:'MTX',  nm:'MTU Aero Engines',exch:'XETRA',type:'Aktie',fmpTk:'MTX.DE'}],
+  // Amsterdam
+  'ASML': [{tk:'ASML', nm:'ASML Holding',  exch:'NASDAQ',type:'Aktie', fmpTk:'ASML'},
+           {tk:'ASML', nm:'ASML Holding',  exch:'AMS',   type:'Aktie', fmpTk:'ASML.AS'}],
+  'BESI': [{tk:'BESI', nm:'BE Semiconductor',exch:'AMS', type:'Aktie', fmpTk:'BESI.AS'}],
+  // US Large Cap
+  'NVDA': [{tk:'NVDA', nm:'Nvidia',        exch:'NASDAQ',type:'Aktie', fmpTk:'NVDA'}],
+  'MSFT': [{tk:'MSFT', nm:'Microsoft',     exch:'NASDAQ',type:'Aktie', fmpTk:'MSFT'}],
+  'AAPL': [{tk:'AAPL', nm:'Apple',         exch:'NASDAQ',type:'Aktie', fmpTk:'AAPL'}],
+  'AMZN': [{tk:'AMZN', nm:'Amazon',        exch:'NASDAQ',type:'Aktie', fmpTk:'AMZN'}],
+  'GOOGL':[{tk:'GOOGL',nm:'Alphabet A',   exch:'NASDAQ',type:'Aktie', fmpTk:'GOOGL'},
+           {tk:'GOOG', nm:'Alphabet C',   exch:'NASDAQ',type:'Aktie', fmpTk:'GOOG'}],
+  'META': [{tk:'META', nm:'Meta Platforms',exch:'NASDAQ',type:'Aktie', fmpTk:'META'}],
+  'TSLA': [{tk:'TSLA', nm:'Tesla',         exch:'NASDAQ',type:'Aktie', fmpTk:'TSLA'}],
+  'AMD':  [{tk:'AMD',  nm:'AMD',           exch:'NASDAQ',type:'Aktie', fmpTk:'AMD'}],
+  'PLTR': [{tk:'PLTR', nm:'Palantir',      exch:'NYSE',  type:'Aktie', fmpTk:'PLTR'}],
+  'NET':  [{tk:'NET',  nm:'Cloudflare',    exch:'NYSE',  type:'Aktie', fmpTk:'NET'}],
+  'CRWD': [{tk:'CRWD', nm:'CrowdStrike',   exch:'NASDAQ',type:'Aktie', fmpTk:'CRWD'}],
+  'SNOW': [{tk:'SNOW', nm:'Snowflake',     exch:'NYSE',  type:'Aktie', fmpTk:'SNOW'}],
+  'COIN': [{tk:'COIN', nm:'Coinbase',      exch:'NASDAQ',type:'Aktie', fmpTk:'COIN'}],
+  'HOOD': [{tk:'HOOD', nm:'Robinhood',     exch:'NASDAQ',type:'Aktie', fmpTk:'HOOD'}],
+  'SQ':   [{tk:'XYZ',  nm:'Block Inc.',    exch:'NYSE',  type:'Aktie', fmpTk:'XYZ'}],
+  'SHOP': [{tk:'SHOP', nm:'Shopify',       exch:'NYSE',  type:'Aktie', fmpTk:'SHOP'}],
+  'RXRX': [{tk:'RXRX', nm:'Recursion Pharma',exch:'NASDAQ',type:'Aktie',fmpTk:'RXRX'}],
+  'MRNA': [{tk:'MRNA', nm:'Moderna',       exch:'NASDAQ',type:'Aktie', fmpTk:'MRNA'}],
+  'HIMS': [{tk:'HIMS', nm:'Hims & Hers',   exch:'NYSE',  type:'Aktie', fmpTk:'HIMS'}],
+  'IONQ': [{tk:'IONQ', nm:'IonQ',          exch:'NYSE',  type:'Aktie', fmpTk:'IONQ'}],
+  'APP':  [{tk:'APP',  nm:'Applovin',      exch:'NASDAQ',type:'Aktie', fmpTk:'APP'}],
+  'MDB':  [{tk:'MDB',  nm:'MongoDB',       exch:'NASDAQ',type:'Aktie', fmpTk:'MDB'}],
+  'DDOG': [{tk:'DDOG', nm:'Datadog',       exch:'NASDAQ',type:'Aktie', fmpTk:'DDOG'}],
+  'ENPH': [{tk:'ENPH', nm:'Enphase Energy',exch:'NASDAQ',type:'Aktie', fmpTk:'ENPH'}],
+  'NU':   [{tk:'NU',   nm:'Nu Holdings',   exch:'NYSE',  type:'Aktie', fmpTk:'NU'}],
+  'RIVN': [{tk:'RIVN', nm:'Rivian',        exch:'NASDAQ',type:'Aktie', fmpTk:'RIVN'}],
+  'SMCI': [{tk:'SMCI', nm:'Super Micro',   exch:'NASDAQ',type:'Aktie', fmpTk:'SMCI'}],
+  'MRVL': [{tk:'MRVL', nm:'Marvell Tech',  exch:'NASDAQ',type:'Aktie', fmpTk:'MRVL'}],
+  'HEI':  [{tk:'HEI',  nm:'HEICO Corp',    exch:'NYSE',  type:'Aktie', fmpTk:'HEI'}],
+  // Canadian
+  'AIDX': [{tk:'AIDX', nm:'Healwell AI',   exch:'TSX',   type:'Aktie', fmpTk:'AIDX.TO'},
+           {tk:'HWAIF',nm:'Healwell AI',   exch:'OTCQX', type:'Aktie', fmpTk:'HWAIF'}],
+  // ETFs
+  'PDBC': [{tk:'PDBC', nm:'Invesco Diversified Commodity',exch:'NASDAQ',type:'ETF',fmpTk:'PDBC'}],
+  'GSG':  [{tk:'GSG',  nm:'iShares S&P GSCI Commodity',  exch:'NYSE',  type:'ETF',fmpTk:'GSG'}],
+  'SPY':  [{tk:'SPY',  nm:'SPDR S&P 500 ETF',            exch:'NYSE',  type:'ETF',fmpTk:'SPY'}],
+  'QQQ':  [{tk:'QQQ',  nm:'Invesco QQQ (Nasdaq 100)',     exch:'NASDAQ',type:'ETF',fmpTk:'QQQ'}],
+  'VTI':  [{tk:'VTI',  nm:'Vanguard Total Market ETF',    exch:'NYSE',  type:'ETF',fmpTk:'VTI'}],
+  'VOO':  [{tk:'VOO',  nm:'Vanguard S&P 500 ETF',         exch:'NYSE',  type:'ETF',fmpTk:'VOO'}],
+  'EWG':  [{tk:'EWG',  nm:'iShares MSCI Germany ETF',     exch:'NYSE',  type:'ETF',fmpTk:'EWG'}],
+};
+
+// Build flat searchable list from AS_EXCHANGES + current watchlist assets
+function asGetSearchIndex() {
+  var index = [];
+  var seen  = {};
+  // From AS_EXCHANGES dict
+  Object.keys(AS_EXCHANGES).forEach(function(key) {
+    AS_EXCHANGES[key].forEach(function(e) {
+      var id = e.fmpTk || (e.tk + '_' + e.exch);
+      if(!seen[id]) { seen[id]=true; index.push(e); }
+    });
+  });
+  // From current watchlist
+  allAssets().forEach(function(a) {
+    var id = a.tk + '_wl';
+    if(!seen[id]) {
+      seen[id] = true;
+      index.push({tk:a.tk, nm:a.nm, exch:a.exch||'', type:'Watchlist', fmpTk:a.tk});
+    }
+  });
+  return index;
+}
+
+function asSearch(query) {
+  query = query.trim().toLowerCase();
+  if(query.length < 1) return [];
+  var index = asGetSearchIndex();
+  var results = [];
+  // Tier 1: exact ticker match
+  var t1 = index.filter(function(e){ return e.tk.toLowerCase()===query; });
+  // Tier 2: ticker starts with
+  var t2 = index.filter(function(e){ return e.tk.toLowerCase().startsWith(query) && e.tk.toLowerCase()!==query; });
+  // Tier 3: name starts with
+  var t3 = index.filter(function(e){ return e.nm.toLowerCase().startsWith(query); });
+  // Tier 4: name contains
+  var t4 = index.filter(function(e){
+    return e.nm.toLowerCase().indexOf(query)>0 && !e.nm.toLowerCase().startsWith(query);
+  });
+  var combined = [].concat(t1,t2,t3,t4);
+  // Deduplicate
+  var seenR = {};
+  combined.forEach(function(e){
+    var id = (e.fmpTk||e.tk)+'_'+e.exch;
+    if(!seenR[id]){ seenR[id]=true; results.push(e); }
+  });
+  return results.slice(0,20);
+}
+
+function asOnInput(val) {
+  clearTimeout(asSearchTimer);
+  asFocusIdx = -1;
+  if(!val || val.trim().length<1) {
+    document.getElementById('as-modal-body').innerHTML='<div class="as-empty">Suchbegriff eingeben.</div>';
+    document.getElementById('as-modal-status').textContent='Tippen zum Suchen…';
+    asLastResults=[];
+    return;
+  }
+  document.getElementById('as-modal-status').textContent='Suche läuft…';
+  asSearchTimer = setTimeout(function(){
+    var results = asSearch(val);
+    asLastResults = results;
+    asRenderResults(results, val);
+  }, 120);
+}
+
+function asRenderResults(results, query) {
+  var body = document.getElementById('as-modal-body');
+  var statusEl = document.getElementById('as-modal-status');
+  if(!results.length) {
+    body.innerHTML='<div class="as-empty">Keine Ergebnisse für „'+escHtml(query)+'".<br><span style="font-size:10px;color:var(--dim)">Tipp: Direkten Ticker eingeben (z.B. AAPL) — dann wird er trotzdem akzeptiert.</span></div>';
+    statusEl.textContent='0 Ergebnisse';
+    return;
+  }
+  statusEl.textContent = results.length + ' Ergebnis' + (results.length===1?'':'se');
+
+  // Group by ticker name
+  var groups = {};
+  var groupOrder = [];
+  results.forEach(function(r){
+    if(!groups[r.nm]){ groups[r.nm]=[]; groupOrder.push(r.nm); }
+    groups[r.nm].push(r);
+  });
+
+  var html = '';
+  var globalIdx = 0;
+  groupOrder.forEach(function(nm){
+    var entries = groups[nm];
+    if(entries.length>1) {
+      // Multiple exchanges → show group with exchange pills
+      html += '<div class="as-result-group">';
+      html += '<div class="as-result-label">' + escHtml(nm) + ' — Börsenwahl</div>';
+      entries.forEach(function(e){
+        var selCls = asSelected && asSelected.fmpTk===e.fmpTk ? ' selected' : '';
+        html += '<div class="as-result-item'+selCls+'" data-idx="'+globalIdx+'" onclick="asSelectItem('+globalIdx+')">'
+          +'<span class="as-result-ticker">'+escHtml(e.tk)+'</span>'
+          +'<span class="as-result-name" style="color:var(--muted);font-size:10px">'+escHtml(e.nm)+'</span>'
+          +'<span class="as-result-type">'+escHtml(e.type)+'</span>'
+          +'<span class="as-result-exch" style="font-weight:500;color:var(--accent)">'+escHtml(e.exch)+'</span>'
+          +'</div>';
+        globalIdx++;
+      });
+      html += '</div>';
+    } else {
+      var e = entries[0];
+      var selCls = asSelected && asSelected.fmpTk===e.fmpTk ? ' selected' : '';
+      html += '<div class="as-result-item'+selCls+'" data-idx="'+globalIdx+'" onclick="asSelectItem('+globalIdx+')">'
+        +'<span class="as-result-ticker">'+escHtml(e.tk)+'</span>'
+        +'<span class="as-result-name">'+escHtml(e.nm)+'</span>'
+        +'<span class="as-result-type">'+escHtml(e.type)+'</span>'
+        +'<span class="as-result-exch">'+escHtml(e.exch)+'</span>'
+        +'</div>';
+      globalIdx++;
+    }
+  });
+  body.innerHTML = html;
+}
+
+function asSelectItem(idx) {
+  asSelected = asLastResults[idx] || null;
+  // Re-render to show selection highlight
+  asRenderResults(asLastResults, document.getElementById('as-modal-input').value);
+  // Update footer preview
+  var preview = document.getElementById('as-selected-preview');
+  var confirmBtn = document.getElementById('as-confirm-btn');
+  if(asSelected) {
+    preview.innerHTML = 'Gewählt: <span>'+escHtml(asSelected.tk)+'</span> — '+escHtml(asSelected.nm)+' ('+escHtml(asSelected.exch)+')';
+    confirmBtn.disabled = false;
+  } else {
+    preview.textContent = 'Noch kein Asset gewählt';
+    confirmBtn.disabled = true;
+  }
+}
+
+function asKeyNav(e) {
+  var items = document.querySelectorAll('.as-result-item');
+  if(!items.length) return;
+  if(e.key==='ArrowDown'){ asFocusIdx=Math.min(asFocusIdx+1,items.length-1); }
+  else if(e.key==='ArrowUp'){ asFocusIdx=Math.max(asFocusIdx-1,0); }
+  else if(e.key==='Enter' && asFocusIdx>=0){ asSelectItem(parseInt(items[asFocusIdx].dataset.idx)); return; }
+  else if(e.key==='Enter' && asFocusIdx<0 && asLastResults.length){ asSelectItem(0); return; }
+  else if(e.key==='Escape'){ asCloseModal(); return; }
+  else return;
+  items.forEach(function(el,i){ el.style.background = i===asFocusIdx ? 'rgba(200,184,154,.08)' : ''; });
+  if(items[asFocusIdx]) items[asFocusIdx].scrollIntoView({block:'nearest'});
+}
+
+function asOpenModal() {
+  asSelected = null;
+  asFocusIdx = -1;
+  asLastResults = [];
+  document.getElementById('as-modal-overlay').classList.add('open');
+  document.getElementById('as-modal-input').value = '';
+  document.getElementById('as-modal-body').innerHTML='<div class="as-empty">Suchbegriff eingeben um Assets zu finden.</div>';
+  document.getElementById('as-modal-status').textContent='Tippen zum Suchen…';
+  document.getElementById('as-selected-preview').textContent='Noch kein Asset gewählt';
+  document.getElementById('as-confirm-btn').disabled=true;
+  setTimeout(function(){ document.getElementById('as-modal-input').focus(); },80);
+}
+
+function asCloseModal() {
+  document.getElementById('as-modal-overlay').classList.remove('open');
+}
+
+function asConfirm() {
+  if(!asSelected) return;
+  // Fill hidden fields
+  document.getElementById('pf-f-tk').value = asSelected.fmpTk || asSelected.tk;
+  document.getElementById('pf-f-nm').value = asSelected.nm;
+  // Update display field
+  var display = document.getElementById('pf-f-search-display');
+  display.value = asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
+  // Show clear button, auto-set currency
+  document.getElementById('pf-f-search-clear').style.display='block';
+  var ccy = 'USD';
+  if(['XETRA','FSE'].indexOf(asSelected.exch)>=0) ccy='EUR';
+  else if(['AMS','EURONEXT'].indexOf(asSelected.exch)>=0) ccy='EUR';
+  else if(['TSX','TSX-V'].indexOf(asSelected.exch)>=0) ccy='CAD';
+  else if(['LSE'].indexOf(asSelected.exch)>=0) ccy='GBP';
+  document.getElementById('pf-f-ccy').value=ccy;
+  asCloseModal();
+  // Focus qty
+  setTimeout(function(){ document.getElementById('pf-f-qty').focus(); },100);
+}
+
+function asClearSelection() {
+  document.getElementById('pf-f-tk').value='';
+  document.getElementById('pf-f-nm').value='';
+  document.getElementById('pf-f-search-display').value='';
+  document.getElementById('pf-f-search-clear').style.display='none';
+  asSelected=null;
+}
+
+// Also allow typing a raw ticker directly in display field and confirming without modal
+// (fallback: if user presses Enter in display field → open modal)
+document.addEventListener('DOMContentLoaded', function(){
+  var disp = document.getElementById('pf-f-search-display');
+  if(disp) {
+    disp.addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ asOpenModal(); }
+    });
+  }
+});
+
 </body>
 </html>
