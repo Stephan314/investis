@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.3</title>
+<title>Investis Dashboard v7.4</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -286,7 +286,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.3</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.4</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -317,7 +317,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.3</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.4</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -505,11 +505,12 @@ select.form-input option{background:var(--bg3)}
           <div class="pf-add-row">
             <div class="pf-add-title">Position hinzufügen</div>
             <div class="pf-add-grid">
-              <div class="form-field" style="grid-column:span 2">
-                <label class="form-label">Asset suchen *</label>
-                <div class="as-search-wrap">
-                  <button class="as-search-input" id="pf-f-search-display" onclick="asOpenModal()" style="text-align:left;cursor:pointer;width:100%;color:var(--dim)" type="button">Name oder Ticker eingeben…</button>
-                  <button class="as-search-clear" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none" type="button">✕</button>
+              <div class="form-field" style="grid-column:1/-1">
+                <label class="form-label">Asset *</label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <div id="pf-f-search-display" style="flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:5px 10px;font-size:11px;color:var(--dim);min-height:28px;display:flex;align-items:center">Noch kein Asset gewählt</div>
+                  <button type="button" onclick="asOpenModal()" class="btn-add" style="white-space:nowrap;flex-shrink:0">⊕ Asset suchen</button>
+                  <button type="button" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none;padding:4px 8px;background:transparent;border:0.5px solid var(--border2);color:var(--dim);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px" title="Auswahl zurücksetzen">✕</button>
                 </div>
                 <input type="hidden" id="pf-f-tk">
                 <input type="hidden" id="pf-f-nm">
@@ -1848,6 +1849,7 @@ function asConfirm() {
   var display = document.getElementById('pf-f-search-display');
   display.textContent = asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
   display.style.color = 'var(--text)';
+  display.style.borderColor = 'rgba(200,184,154,.4)';
   // Show clear button, auto-set currency
   document.getElementById('pf-f-search-clear').style.display='block';
   var ccy = 'USD';
@@ -1865,8 +1867,9 @@ function asClearSelection() {
   document.getElementById('pf-f-tk').value='';
   document.getElementById('pf-f-nm').value='';
   var dispEl = document.getElementById('pf-f-search-display');
-  dispEl.textContent='Name oder Ticker eingeben…';
+  dispEl.textContent='Noch kein Asset gewählt';
   dispEl.style.color='var(--dim)';
+  dispEl.style.borderColor='';
   document.getElementById('pf-f-search-clear').style.display='none';
   asSelected=null;
 }
