@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.2</title>
+<title>Investis Dashboard v7.3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -275,12 +275,18 @@ select.form-input option{background:var(--bg3)}
 .as-cancel-btn:hover{color:var(--text);border-color:var(--text)}
 .as-empty{padding:24px;text-align:center;color:var(--dim);font-size:11px}
 .as-loading{padding:16px;text-align:center;color:var(--muted);font-size:11px}
+
+.pf-tab-actions{display:inline-flex;align-items:center;gap:3px;margin-left:6px;opacity:0;transition:opacity .15s}
+.pf-tab.active:hover .pf-tab-actions, .pf-tab.active .pf-tab-actions{opacity:1}
+.pf-tab-icon{font-size:11px;color:var(--dim);cursor:pointer;padding:1px 3px;border-radius:2px;line-height:1;transition:all .1s}
+.pf-tab-icon:hover{color:var(--accent);background:rgba(200,184,154,.12)}
+.pf-tab-del:hover{color:var(--red)!important;background:rgba(248,113,113,.1)!important}
 </style>
 </head>
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.2</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.3</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -311,7 +317,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.2</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.3</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -502,8 +508,8 @@ select.form-input option{background:var(--bg3)}
               <div class="form-field" style="grid-column:span 2">
                 <label class="form-label">Asset suchen *</label>
                 <div class="as-search-wrap">
-                  <input class="as-search-input" id="pf-f-search-display" placeholder="Name oder Ticker eingeben…" readonly onclick="asOpenModal()" style="cursor:pointer">
-                  <button class="as-search-clear" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none">✕</button>
+                  <button class="as-search-input" id="pf-f-search-display" onclick="asOpenModal()" style="text-align:left;cursor:pointer;width:100%;color:var(--dim)" type="button">Name oder Ticker eingeben…</button>
+                  <button class="as-search-clear" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none" type="button">✕</button>
                 </div>
                 <input type="hidden" id="pf-f-tk">
                 <input type="hidden" id="pf-f-nm">
@@ -1290,10 +1296,16 @@ function pfRenderTabs() {
   var html = '';
   portfolios.forEach(function(p) {
     var active = p.id === (pf && pf.id) ? ' active' : '';
-    html += '<div class="pf-tab' + active + '" onclick="pfSelectTab(\'' + p.id + '\')">'
-         +  '<span id="pf-tab-label-' + p.id + '">' + escHtml(p.name) + '</span>'
-         +  '<span style="font-size:9px;color:var(--dim);margin-left:4px">(' + p.positions.length + ')</span>'
-         + '</div>';
+    html += '<div class="pf-tab' + active + '" onclick="pfSelectTab(\'' + p.id + '\')" style="padding-right:6px">'
+         +  '<span>' + escHtml(p.name) + '</span>'
+         +  '<span style="font-size:9px;color:var(--dim);margin-left:4px">(' + p.positions.length + ')</span>';
+    if(active) {
+      html += '<span class="pf-tab-actions">'
+           +  '<span class="pf-tab-icon" title="Umbenennen" onclick="event.stopPropagation();pfRenamePortfolio(\'' + p.id + '\')">✎</span>'
+           +  '<span class="pf-tab-icon pf-tab-del" title="Portfolio löschen" onclick="event.stopPropagation();pfDeletePortfolio(\'' + p.id + '\')">⊘</span>'
+           +  '</span>';
+    }
+    html += '</div>';
   });
   html += '<button class="pf-tab-add" onclick="pfNewPortfolio()" title="Neues Portfolio">+ Neu</button>';
   document.getElementById('pf-tabs-row').innerHTML = html;
@@ -1834,7 +1846,8 @@ function asConfirm() {
   document.getElementById('pf-f-nm').value = asSelected.nm;
   // Update display field
   var display = document.getElementById('pf-f-search-display');
-  display.value = asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
+  display.textContent = asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
+  display.style.color = 'var(--text)';
   // Show clear button, auto-set currency
   document.getElementById('pf-f-search-clear').style.display='block';
   var ccy = 'USD';
@@ -1851,21 +1864,16 @@ function asConfirm() {
 function asClearSelection() {
   document.getElementById('pf-f-tk').value='';
   document.getElementById('pf-f-nm').value='';
-  document.getElementById('pf-f-search-display').value='';
+  var dispEl = document.getElementById('pf-f-search-display');
+  dispEl.textContent='Name oder Ticker eingeben…';
+  dispEl.style.color='var(--dim)';
   document.getElementById('pf-f-search-clear').style.display='none';
   asSelected=null;
 }
 
 // Also allow typing a raw ticker directly in display field and confirming without modal
 // (fallback: if user presses Enter in display field → open modal)
-document.addEventListener('DOMContentLoaded', function(){
-  var disp = document.getElementById('pf-f-search-display');
-  if(disp) {
-    disp.addEventListener('keydown', function(e){
-      if(e.key==='Enter'){ asOpenModal(); }
-    });
-  }
-});
+// Search button is a <button>, no extra listener needed
 
 </body>
 </html>
