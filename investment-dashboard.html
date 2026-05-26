@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.4</title>
+<title>Investis Dashboard v7.5</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -286,7 +286,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.4</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.5</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -317,7 +317,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.4</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.5</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -506,12 +506,12 @@ select.form-input option{background:var(--bg3)}
             <div class="pf-add-title">Position hinzufügen</div>
             <div class="pf-add-grid">
               <div class="form-field" style="grid-column:1/-1">
-                <label class="form-label">Asset *</label>
+                <label class="form-label">Asset * — klicken zum Suchen</label>
                 <div style="display:flex;gap:6px;align-items:center">
-                  <div id="pf-f-search-display" style="flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:5px 10px;font-size:11px;color:var(--dim);min-height:28px;display:flex;align-items:center">Noch kein Asset gewählt</div>
-                  <button type="button" onclick="asOpenModal()" class="btn-add" style="white-space:nowrap;flex-shrink:0">⊕ Asset suchen</button>
-                  <button type="button" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none;padding:4px 8px;background:transparent;border:0.5px solid var(--border2);color:var(--dim);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px" title="Auswahl zurücksetzen">✕</button>
+                  <button type="button" id="pf-f-search-display" onclick="asOpenModal()" style="flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:6px 10px;font-size:11px;color:var(--dim);min-height:30px;display:flex;align-items:center;cursor:pointer;font-family:var(--mono);text-align:left;transition:border-color .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="if(!document.getElementById('pf-f-tk').value)this.style.borderColor=''">🔍 Name oder Ticker eingeben…</button>
+                  <button type="button" id="pf-f-search-clear" onclick="asClearSelection()" style="display:none;padding:5px 9px;background:transparent;border:0.5px solid var(--border2);color:var(--dim);cursor:pointer;border-radius:3px;font-family:var(--mono);font-size:11px" title="Auswahl zurücksetzen">✕</button>
                 </div>
+                <div id="pf-f-hint" style="font-size:9px;color:var(--dim);margin-top:3px;display:none">✓ Asset gewählt — jetzt Stückzahl und Einstiegspreis eintragen, dann „+ Position hinzufügen" klicken.</div>
                 <input type="hidden" id="pf-f-tk">
                 <input type="hidden" id="pf-f-nm">
               </div>
@@ -1390,6 +1390,7 @@ function pfAddPosition() {
   // Clear form
   ['pf-f-tk','pf-f-nm','pf-f-qty','pf-f-avg','pf-f-note'].forEach(function(id){ document.getElementById(id).value=''; });
   asClearSelection();
+  var hint2 = document.getElementById('pf-f-hint'); if(hint2) hint2.style.display='none';
   showToast(tk + ' hinzugefügt ✓');
 }
 
@@ -1610,6 +1611,32 @@ var asLastResults = [];
 // suffix = what to append to ticker for FMP (e.g. ".DE" for Xetra)
 const AS_EXCHANGES = {
   // Xetra / German
+  'IFX':  [{tk:'IFX',  nm:'Infineon Technologies',exch:'XETRA',type:'Aktie',fmpTk:'IFX.DE'}],
+  'SHL':  [{tk:'SHL',  nm:'Siemens Healthineers', exch:'XETRA',type:'Aktie',fmpTk:'SHL.DE'}],
+  'ENR':  [{tk:'ENR',  nm:'Siemens Energy',       exch:'XETRA',type:'Aktie',fmpTk:'ENR.DE'}],
+  'LIN':  [{tk:'LIN',  nm:'Linde PLC',            exch:'NASDAQ',type:'Aktie',fmpTk:'LIN'},
+           {tk:'LIN',  nm:'Linde PLC',            exch:'XETRA', type:'Aktie',fmpTk:'LIN.DE'}],
+  'AIR':  [{tk:'AIR',  nm:'Airbus SE',            exch:'XETRA',type:'Aktie',fmpTk:'AIR.DE'},
+           {tk:'EADSY',nm:'Airbus SE',            exch:'OTCQX', type:'ADR',  fmpTk:'EADSY'}],
+  'CON':  [{tk:'CON',  nm:'Continental AG',       exch:'XETRA',type:'Aktie',fmpTk:'CON.DE'}],
+  'FRE':  [{tk:'FRE',  nm:'Fresenius SE',         exch:'XETRA',type:'Aktie',fmpTk:'FRE.DE'}],
+  'FME':  [{tk:'FME',  nm:'Fresenius Medical',    exch:'XETRA',type:'Aktie',fmpTk:'FME.DE'}],
+  'SRT3': [{tk:'SRT3', nm:'Sartorius VZ',         exch:'XETRA',type:'Aktie',fmpTk:'SRT3.DE'}],
+  'ZAL':  [{tk:'ZAL',  nm:'Zalando SE',           exch:'XETRA',type:'Aktie',fmpTk:'ZAL.DE'}],
+  'SY1':  [{tk:'SY1',  nm:'Symrise AG',           exch:'XETRA',type:'Aktie',fmpTk:'SY1.DE'}],
+  'HFG':  [{tk:'HFG',  nm:'HelloFresh SE',        exch:'XETRA',type:'Aktie',fmpTk:'HFG.DE'}],
+  'PUM':  [{tk:'PUM',  nm:'Puma SE',              exch:'XETRA',type:'Aktie',fmpTk:'PUM.DE'}],
+  'MUV2': [{tk:'MUV2', nm:'Munich Re',            exch:'XETRA',type:'Aktie',fmpTk:'MUV2.DE'}],
+  'CBK':  [{tk:'CBK',  nm:'Commerzbank',          exch:'XETRA',type:'Aktie',fmpTk:'CBK.DE'}],
+  'HEI2': [{tk:'HEI2', nm:'Heidelberg Materials', exch:'XETRA',type:'Aktie',fmpTk:'HEI2.DE'}],
+  'P911': [{tk:'P911', nm:'Porsche AG',           exch:'XETRA',type:'Aktie',fmpTk:'P911.DE'}],
+  'PAH3': [{tk:'PAH3', nm:'Porsche SE',           exch:'XETRA',type:'Aktie',fmpTk:'PAH3.DE'}],
+  'QIA':  [{tk:'QIA',  nm:'Qiagen NV',            exch:'XETRA',type:'Aktie',fmpTk:'QIA.DE'}],
+  'BEI':  [{tk:'BEI',  nm:'Beiersdorf AG',        exch:'XETRA',type:'Aktie',fmpTk:'BEI.DE'}],
+  'EVO':  [{tk:'EVO',  nm:'Evonik Industries',    exch:'XETRA',type:'Aktie',fmpTk:'EVO.DE'}],
+  'TKA':  [{tk:'TKA',  nm:'Thyssenkrupp AG',      exch:'XETRA',type:'Aktie',fmpTk:'TKA.DE'}],
+  'RAA':  [{tk:'RAA',  nm:'Rational AG',          exch:'XETRA',type:'Aktie',fmpTk:'RAA.DE'}],
+  // SAP (existing, kept below)
   'SAP':  [{tk:'SAP',  nm:'SAP SE',      exch:'XETRA', type:'Aktie', fmpTk:'SAP.DE'},
            {tk:'SAP',  nm:'SAP SE',       exch:'NYSE',  type:'ADR',   fmpTk:'SAP'}],
   'SIE':  [{tk:'SIE',  nm:'Siemens AG',   exch:'XETRA', type:'Aktie', fmpTk:'SIE.DE'}],
@@ -1846,9 +1873,11 @@ function asConfirm() {
   document.getElementById('pf-f-nm').value = asSelected.nm;
   // Update display field
   var display = document.getElementById('pf-f-search-display');
-  display.textContent = asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
-  display.style.color = 'var(--text)';
+  display.textContent = '✓ ' + asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
+  display.style.color = 'var(--accent)';
   display.style.borderColor = 'rgba(200,184,154,.4)';
+  var hint = document.getElementById('pf-f-hint');
+  if(hint) hint.style.display = 'block';
   // Show clear button, auto-set currency
   document.getElementById('pf-f-search-clear').style.display='block';
   var ccy = 'USD';
@@ -1870,6 +1899,8 @@ function asClearSelection() {
   dispEl.style.color='var(--dim)';
   dispEl.style.borderColor='';
   document.getElementById('pf-f-search-clear').style.display='none';
+  var hint = document.getElementById('pf-f-hint');
+  if(hint) hint.style.display = 'none';
   asSelected=null;
 }
 
