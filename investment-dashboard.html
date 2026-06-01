@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Investis Dashboard v7.9</title>
+<title>Investis Dashboard v8.0</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d0f12;--bg2:#13161a;--bg3:#1a1e24;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);--text:#e8e6e0;--muted:#6b7280;--dim:#3d4350;--green:#4ade80;--red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--accent:#c8b89a;--purple:#c084fc;--mono:'DM Mono',monospace;--serif:'Fraunces',Georgia,serif}
@@ -302,7 +302,7 @@ select.form-input option{background:var(--bg3)}
 <body>
 <div class="app">
 <div class="sidebar">
-  <div class="sb-logo"><h1>Investis</h1><p>Investment System v7.9</p></div>
+  <div class="sb-logo"><h1>Investis</h1><p>Investment System v8.0</p></div>
   <div class="sb-sec">
     <div class="sb-lbl">Navigation</div>
     <div class="nav-item active" onclick="showTab('watchlist')"><div class="nav-dot"></div>Watchlists</div>
@@ -333,7 +333,7 @@ select.form-input option{background:var(--bg3)}
     </div>
     <div class="topbar-right">
       <span class="ts" id="last-update">Stand: Mai 2025</span>
-      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v7.9</span>
+      <span class="ts" style="color:var(--dim);border:0.5px solid var(--dim);border-radius:2px;padding:2px 6px;font-size:9px" id="version-badge">v8.0</span>
       <button class="btn-top" onclick="refreshAll()">~ Refresh</button>
       <button class="btn-top btn-live" id="btn-live" onclick="fmpUpdateAll()"><> Live-Daten</button>
       <button class="btn-top btn-ai" onclick="openAiPanel()">* KI-Update</button>
@@ -388,8 +388,15 @@ select.form-input option{background:var(--bg3)}
         <div class="add-form">
           <div class="add-form-title">Asset hinzufügen</div>
           <div class="add-form-grid">
-            <div class="form-field"><label class="form-label">Ticker *</label><input class="form-input" id="f-ticker" placeholder="z.B. AAPL" maxlength="10"></div>
-            <div class="form-field"><label class="form-label">Name *</label><input class="form-input" id="f-name" placeholder="z.B. Apple Inc."></div>
+            <div class="form-field" style="grid-column:1/-1">
+              <label class="form-label">Asset suchen *</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button type="button" id="wl-search-btn" onclick="wlOpenSearch()" style="flex:1;background:var(--bg3);border:0.5px solid var(--border2);border-radius:3px;padding:6px 10px;font-size:11px;color:var(--dim);min-height:30px;display:flex;align-items:center;cursor:pointer;font-family:var(--mono);text-align:left;transition:border-color .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="if(!document.getElementById('f-ticker').value)this.style.borderColor=''">🔍 Name oder Ticker eingeben…</button>
+                <button type="button" onclick="wlClearSearch()" id="wl-clear-btn" style="display:none;background:none;border:0.5px solid var(--border2);border-radius:3px;padding:4px 8px;font-size:11px;color:var(--muted);cursor:pointer;font-family:var(--mono)" title="Auswahl löschen">✕</button>
+              </div>
+              <input type="hidden" id="f-ticker">
+              <input type="hidden" id="f-name">
+            </div>
             <div class="form-field"><label class="form-label">Sektor</label>
               <select class="form-input" id="f-sector">
                 <option value="Custom">Eigene</option><option value="Tech">Tech</option><option value="Semi">Halbleiter</option>
@@ -761,9 +768,9 @@ function renderTable() {
 
 // ── MY WATCHLIST ─────────────────────────────
 function addCustomAsset() {
-  var tk = document.getElementById('f-ticker').value.trim().toUpperCase();
-  var nm = document.getElementById('f-name').value.trim();
-  if(!tk || !nm) { showToast('Ticker und Name sind Pflichtfelder', 'error'); return; }
+  var tk = (document.getElementById('f-ticker').value||'').trim().toUpperCase();
+  var nm = (document.getElementById('f-name').value||'').trim();
+  if(!tk || !nm) { showToast('Bitte zuerst ein Asset über die Suche auswählen', 'error'); return; }
   var all = allAssets();
   if(all.some(function(s){ return s.tk===tk; })) { showToast(tk + ' bereits vorhanden', 'error'); return; }
   myWatchlist.push({
@@ -777,16 +784,25 @@ function addCustomAsset() {
   });
   saveMyList();
   renderMyTable(); renderSidebar(); renderMatrix();
-  ['f-ticker','f-name','f-adr','f-note'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['f-adr','f-note'].forEach(function(id){ document.getElementById(id).value=''; });
   showToast(tk + ' hinzugef\u00fcgt \u2713');
+  resetAddForm();
 }
 
 function editCustomAsset(tk) {
   var s = myWatchlist.find(function(a){ return a.tk===tk; });
   if(!s) return;
-  // Fill form with existing values
+  // Update search button to show current asset
+  var btn = document.getElementById('wl-search-btn');
+  if(btn) {
+    btn.textContent = '✓ ' + s.tk + ' — ' + s.nm + ' (' + (s.exch||'') + ')';
+    btn.style.color = 'var(--accent)';
+    btn.style.borderColor = 'rgba(200,184,154,.4)';
+  }
+  var clr = document.getElementById('wl-clear-btn');
+  if(clr) clr.style.display = 'block';
+  // Fill hidden fields
   document.getElementById('f-ticker').value = s.tk;
-  document.getElementById('f-ticker').disabled = true; // can't change ticker
   document.getElementById('f-name').value = s.nm;
   document.getElementById('f-sector').value = s.sec;
   document.getElementById('f-exch').value = s.exch;
@@ -831,6 +847,26 @@ function resetAddForm() {
   var addBtn = document.querySelector('.btn-add');
   addBtn.textContent = '+ Hinzufügen';
   addBtn.onclick = function(){ addCustomAsset(); };
+  // reset search button
+  var btn = document.getElementById('wl-search-btn');
+  if(btn){ btn.textContent = '🔍 Name oder Ticker eingeben…'; btn.style.color='var(--dim)'; btn.style.borderColor=''; }
+  var clr = document.getElementById('wl-clear-btn');
+  if(clr) clr.style.display='none';
+}
+
+// open the existing AS modal but in watchlist-fill mode
+var wlSearchMode = false;
+function wlOpenSearch() {
+  wlSearchMode = true;
+  asOpenModal();
+}
+function wlClearSearch() {
+  document.getElementById('f-ticker').value = '';
+  document.getElementById('f-name').value = '';
+  var btn = document.getElementById('wl-search-btn');
+  if(btn){ btn.textContent = '🔍 Name oder Ticker eingeben…'; btn.style.color='var(--dim)'; btn.style.borderColor=''; }
+  var clr = document.getElementById('wl-clear-btn');
+  if(clr) clr.style.display='none';
 }
 
 function removeCustomAsset(tk) {
@@ -1967,11 +2003,38 @@ function asOpenModal() {
 
 function asCloseModal() {
   document.getElementById('as-modal-overlay').classList.remove('open');
+  wlSearchMode = false;
 }
 
 function asConfirm() {
   if(!asSelected) return;
-  // Fill hidden fields
+  if(wlSearchMode) {
+    // Fill watchlist hidden fields
+    document.getElementById('f-ticker').value = asSelected.fmpTk || asSelected.tk;
+    document.getElementById('f-name').value = asSelected.nm;
+    // Try to auto-detect exchange
+    var exEl = document.getElementById('f-exch');
+    if(exEl && asSelected.exch) {
+      var exchMap = {'XETRA':'XETRA','AMS':'AMS','LSE':'LSE','SWX':'SWX','NASDAQ':'NASDAQ','NYSE':'NYSE','GETTEX':'GETTEX'};
+      var mapped = exchMap[asSelected.exch];
+      if(mapped) exEl.value = mapped;
+    }
+    // Update search button display
+    var btn = document.getElementById('wl-search-btn');
+    if(btn) {
+      btn.textContent = '✓ ' + asSelected.tk + ' — ' + asSelected.nm + ' (' + asSelected.exch + ')';
+      btn.style.color = 'var(--accent)';
+      btn.style.borderColor = 'rgba(200,184,154,.4)';
+    }
+    var clr = document.getElementById('wl-clear-btn');
+    if(clr) clr.style.display = 'block';
+    wlSearchMode = false;
+    asCloseModal();
+    // Focus ADR field next
+    setTimeout(function(){ document.getElementById('f-adr').focus(); }, 100);
+    return;
+  }
+  // Fill hidden fields (portfolio mode)
   document.getElementById('pf-f-tk').value = asSelected.fmpTk || asSelected.tk;
   document.getElementById('pf-f-nm').value = asSelected.nm;
   // Update display field
